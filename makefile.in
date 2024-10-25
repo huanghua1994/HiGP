@@ -1,0 +1,20 @@
+CC  = gcc
+CXX = g++
+
+USE_MKL      = 0
+USE_OPENBLAS = 1
+
+ifeq ($(strip $(USE_MKL)), 1)
+DEFS = -DUSE_MKL
+CPU_LINALG_LD_PATH = $(MKLROOT)/lib/intel64
+CPU_LINALG_LIBS    = -mkl
+endif
+
+ifeq ($(strip $(USE_OPENBLAS)), 1)
+DEFS = -DUSE_OPENBLAS_LP64
+# The following files should exists:
+# $(CPU_LINALG_LD_PATH)/libopenblas.a
+# $(CPU_LINALG_LD_PATH)/libopenblas.so
+CPU_LINALG_LD_PATH = ../../OpenBLAS-git/install/lib
+CPU_LINALG_LIBS    = -lopenblas
+endif

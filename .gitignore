@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+
+cpp-lib/*
+.vscode/*
+*.bin
+
+py-interface/build/*
+py-interface/dist/*
+py-interface/*.egg-info/*
+
+py-notebook/.ipynb_checkpoints/*
+py-notebook/tmp/*
