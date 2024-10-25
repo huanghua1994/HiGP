@@ -1,4 +1,4 @@
-# 4. Compiling
+# 4. Developer information
 
 Before proceeding in this section, please set a shell environment `REPOROOT` to the root directory of the HiGP repository.
 
@@ -26,9 +26,9 @@ The HiGP Python part implements the following modules:
 1. `higp.GPRModel` module. This module registers the hyperparameters used in GP regression as PyTorch parameters and set the gradients of PyTorch parameters in each step for the PyTorch optimizer.
 2. `higp.GPCModel` module. This module registers the hyperparameters used in GP classification as PyTorch parameters and set the gradients of PyTorch parameters in each step for the PyTorch optimizer.
 
-## 4.2 Building HiGP on your local machine
+## 4.2 Building HiGP on local machine
 
-For testing or debugging purposes, you may want to build the HiGP package on your local machine instead of installing the release versions using `pip`. We also strongly suggest building the HiGP Python package in a conda environment. To build the HiGP Python package, you need:
+For testing or debugging purposes, you may want to build the HiGP package on local machine instead of installing the release versions using `pip`. We also strongly suggest building the HiGP Python package in a conda environment. To build the HiGP Python package, you need:
 
 * Python 3.7 or a newer version,
 * NumPy 1.15 or a newer version.

@@ -1,8 +1,8 @@
-# 4. List of Python interfaces
+# 3. API Reference
 
 Note: we suggest using default values for optional inputs for general usage.
 
-## 4.1 Class `higp.GPRModel`
+## 3.1 Class `higp.GPRModel`
 
 GP regression model for PyTorch.
 
@@ -24,7 +24,7 @@ GP regression model for PyTorch.
 * Output:
   * `np` : NumPy 1D array of length 3, $[l, f, s]$
 
-## 4.2 Class `higp.GPCModel`
+## 3.2 Class `higp.GPCModel`
 
 GP classification model for PyTorch.
 
@@ -47,7 +47,7 @@ GP classification model for PyTorch.
 * Output:
   * `np` : NumPy 1D array of length `3 * num_classes`, $[l_1, f_1, s_1, l_2, f_2, s_2, ...]$
 
-## 4.3 Method `gpr_torch_minimize()`
+## 3.3 Method `gpr_torch_minimize()`
 
 GP regression minimization using PyTorch optimizer.
 
@@ -62,7 +62,7 @@ GP regression minimization using PyTorch optimizer.
   * `loss_hist` : NumPy 1D array of length `maxits+1`, module loss function value after each iteration
   * `param_hist`: NumPy 2D matrix of size `maxits+1`-by-3, each row are the hyperparameters after each iteration
 
-## 4.4 Method `gpc_torch_minimize()`
+## 3.4 Method `gpc_torch_minimize()`
 
 GP regression minimization using PyTorch optimizer.
 
@@ -77,7 +77,7 @@ GP regression minimization using PyTorch optimizer.
   * `loss_hist` : NumPy 1D array of length `maxits+1`, module loss function value after each iteration
   * `param_hist`: NumPy 2D matrix of size `maxits+1`-by-`3*num_classes`, each row are the hyperparameters after each iteration
 
-## 4.5 Method `ezgpr_torch()`
+## 3.5 Method `ezgpr_torch()`
 
 Easy to use GP regression interface with PyTorch using Adam optimizer.
 

@@ -22,7 +22,7 @@ For training data ${\mathbf{X}} \in {\mathbb{R}}^{n \times d}$, noisy training o
 \end{pmatrix}.
 ```
 
-Here, $f$ and $\mu$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function, and $\kappa({\mathbf{X}},\mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa({\mathbf{X}}_i,\mathbf{Y}_j)$, where ${\mathbf{X}}_i$ denotes the $i$-th column of the dataset ${\mathbf{X}}$. Commonly used kernel functions are listed in the next sub-section ([Section 2.2 Kernels]()). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa({\mathbf{x}},{\mathbf{y}}) = \exp(-||{\mathbf{x}}-{\mathbf{y}}||_2^2 / (2l^2))$ depends on the parameter $l$, typically known as the length-scale.
+Here, $f$ and $\mu$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function, and $\kappa({\mathbf{X}},\mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa({\mathbf{X}}_i,\mathbf{Y}_j)$, where ${\mathbf{X}}_i$ denotes the $i$-th column of the dataset ${\mathbf{X}}$. Commonly used kernel functions are listed in the next sub-section ([Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels)). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa({\mathbf{x}},{\mathbf{y}}) = \exp(-||{\mathbf{x}}-{\mathbf{y}}||_2^2 / (2l^2))$ depends on the parameter $l$, typically known as the length-scale.
 
 The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $\mu$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood (NLML):
 
@@ -62,7 +62,7 @@ The Matern 5/2 kernel has a kernel id of 3 in HiGP. It is defined as:
 K_{\text{Matern52}}(x, y; l) = \left(1 + \sqrt{5} \frac{\|x - y\|_2}{l} + \frac{5 \|x - y\|_2^2}{3 l^2} \right) \exp \left( - \sqrt{5} \frac{\|x - y\|_2}{l} \right).
 ```
 
-HiGP also supports defining a custom kernel. Please see [Section 2.6 Defining and using a custom kernel]() for detailed information.
+HiGP also supports defining a custom kernel. Please see [Section 2.6 Defining and using a custom kernel](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#26-defining-and-using-a-custom-kernel) for detailed information.
 
 ## 2.3 Data structures
 

@@ -60,7 +60,7 @@ HiGP has an "easy GP regression" (ezgpr) interface to train the model and test t
 pred_y, std_y = higp.ezgpr_torch(train_x, train_y, test_x, test_y, adam_lr=0.1, adam_maxits=100)
 ```
 
-This "ezgpr" interface uses the RBF (Gaussian) kernel, [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) in the training with a learning rate 0.1 (`adam_lr=0.1`) and 100 training iterations (`adam_maxits=100`). It returns two arrays of the same size as `test_x`: `pred_y` is the prediction mean values, `std_y` is the prediction standard deviations.
+This "ezgpr" interface uses the RBF (Gaussian) kernel, [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) in the training with a learning rate 0.1 (`adam_lr=0.1`) and 100 training iterations (`adam_maxits=100`). We can also use Matern kernels in the ezgpr interface (see [Section 3.5 Method ezgpr_torch](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#35-method-ezgpr_torch)) It returns two arrays of the same size as `test_x`: `pred_y` is the prediction mean values, `std_y` is the prediction standard deviations.
 
 We can use the following code to visualize the prediction:
 

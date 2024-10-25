@@ -42,6 +42,7 @@ static void custom_123d(
         #pragma omp simd
         for (int i = 0; i < n0; i++)
         {
+            // Compute the squared distance and store it in d2
             VT dx, dy = 0, dz = 0, d2;
             dx = x0[i] - x1j;
             d2 = dx * dx;
@@ -55,6 +56,7 @@ static void custom_123d(
                 dz = z0[i] - z1j;
                 d2 += dz * dz;
             }
+            // Compute the kernel function based on d2
             VT k_ij = std::exp(d2 * neg_inv_2l2);
             if (require_krnl == 1) k_mat_j[i]  = k_ij;
             if (require_grad == 1) dl_mat_j[i] = d2 * k_ij * inv_l3;
@@ -76,6 +78,8 @@ static void custom_generic(
 
     VT dim_v = (VT) dim;
     int val_type = (std::is_same<VT, double>::value) ? VAL_TYPE_DOUBLE : VAL_TYPE_FLOAT;
+
+    // Compute the pairwise squared distance and store it in dist2_mat
     pdist2_krnl(
         n0, ld0, (const void *) c0, n1, ld1, (const void *) c1, 
         (const void *) &dim_v, ldm, (void *) dist2_mat, val_type
@@ -91,6 +95,7 @@ static void custom_generic(
         for (int i = 0; i < n0; i++)
         {
             VT d2 = dist2_mat_j[i];
+            // Compute the kernel function based on d2
             VT k_ij = std::exp(d2 * neg_inv_2l2);
             if (require_krnl == 1) k_mat_j[i]  = k_ij;
             if (require_grad == 1) dl_mat_j[i] = d2 * k_ij * inv_l3;
