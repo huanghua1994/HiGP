@@ -16,10 +16,15 @@ if ! test -f ./Miniconda3-latest-Linux-x86_64.sh; then
 fi
 if ! test -d /root/miniconda3; then
     ./Miniconda3-latest-Linux-x86_64.sh -b
-    export PATH=/root/miniconda3/bin:$PATH
-    conda init
-    source /root/.bashrc
 fi
+
+export PATH=/root/miniconda3/bin:$PATH
+conda init
+source /root/.bashrc
+
+# Switch to conda-forge channel for libopenblas=*=*openmp*
+conda config --add channels conda-forge
+conda config --set channel_priority strict
 
 # Build package for different versions
 export BUILD_HIGP_RELEASE=1
@@ -30,8 +35,9 @@ do
     # Setup conda environment
     conda create -n py$PY_VERSION python=$PY_VERSION -y
     conda activate py$PY_VERSION
-    conda install "blas=*=openblas" -y
-    conda install numpy -y
+    conda install -y libopenblas=*=*openmp*
+    conda install -y "blas=*=openblas"
+    conda install -y numpy
 
     # Compile the python module
     cd /io/py-interface
@@ -40,7 +46,9 @@ do
     cp dist/*-linux_x86_64.whl /
 
     # Audit for manylinux
+    # auditwheel might be unable to find the libopenblas.so.0, add it to LD_LIBRARY_PATH
     cd /
+    export LD_LIBRARY_PATH=/root/miniconda3/envs/py$PY_VERSION/lib:$OLD_LD_LIBRARY_PATH
     auditwheel repair *-linux_x86_64.whl
     mv /wheelhouse/*-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /io
     rm -rf *-linux_x86_64.whl
