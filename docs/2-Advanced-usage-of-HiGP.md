@@ -66,7 +66,7 @@ HiGP also supports defining a custom kernel. Please see [Section 2.6 Defining an
 
 ## 2.3 Data structures
 
-To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points, with each data point having $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$'N'$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
+To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points, with each data point having $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$`N`$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
 
 To set up and train a GP model, we also need to provide a label set. The label set should be an 1D NumPy array of length $N$.
 
@@ -74,7 +74,7 @@ Please use the `ascontiguousarray()` method in NumPy to ensure that the dataset 
 
 ## 2.4 Defining and training a GP model
 
-Assuming that we have prepared a training dataset `train_x` of shape $d$-by-$'N'$ and a training label set `train_y` of length $N$. Both `train_x` and `train_y` are of the `np_dtype` data type (`np_dtype = numpy.float32` or `np_dtype = numpy.float64`). We can easily define a GP regression model using the following four lines of code:
+Assume that we have prepared a training dataset `train_x` with shape $d$-by-$`N`$ and a training label set `train_y` of length $N$, both `train_x` and `train_y` are of type `np_dtype` (`np_dtype = numpy.float32` or `np_dtype = numpy.float64`). We can then define a GP regression model using the following four lines of code:
 
 ```python
 torch_dtype = torch.float32 if np_dtype == numpy.float32 else torch.float64
@@ -86,7 +86,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 In this code listing:
 
 * The first line defines the `torch_dtype` according to the `np_dtype` to ensure the GP training and PyTorch optimizer use the correct data type.
-* The second line creates a `higp.gprproblem` object that contains the training data (`data=train_x`), training label (`label=train_y`), and the kernel function to use (`kernel_type=1`, Gaussian kernel). We can use `kernel_type=2` for the Matern 3/2 kernel, or `kernel_type=3` for the Matern 5/2 kernel. This object computes of the model's loss using the current set of hyperparameters (updated by the optimizer) and the gradients of hyperparameters.
+* The second line creates a `higp.gprproblem` object that contains the training data and specifies the kernel function to use (`kernel_type=1` is the Gaussian kernel). We can use `kernel_type=2` for the Matern 3/2 kernel, or `kernel_type=3` for the Matern 5/2 kernel. This object computes of the model's error function and error function gradient at the current values of the hyperparameters.
 * The third line creates a `GPRModel` object using the `higp.gprproblem` object. This object registers the hyperparameters as PyTorch parameters and set the gradients of PyTorch parameters in each step for the PyTorch optimizer.
 * The forth line creates a [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) with learning rate = 0.1 (`lr=0.1`). We can also use other optimizers in PyTorch.
 
