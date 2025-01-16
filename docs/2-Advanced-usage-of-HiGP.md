@@ -4,7 +4,7 @@
 
 Gaussian processes (GPs) are a flexible, non-parametric Bayesian method for modeling complex data and are important in many scientific and engineering fields.
 
-For training data $'{\mathbf{X}} \in {\mathbb{R}}^{n \times d}'$, noisy training observations $'{\mathbf{y}} \in {\mathbb{R}}^{n}'$, and testing data $'{\mathbf{X}}_{*} \in {\mathbb{R}}^{m \times d}'$, a standard GP model assumes that the noise-free testing observations $'{\mathbf{y}}_{*}  \in {\mathbb{R}}^{m}'$ follow the joint distribution:
+For training data ${\mathbf{X}} \in {\mathbb{R}}^{n \times d}$, noisy training observations ${\mathbf{y}} \in {\mathbb{R}}^{n}$, and testing data $`{\mathbf{X}}_{*} \in {\mathbb{R}}^{m \times d}`$, a standard GP model assumes that the noise-free test target values $`y_* \in R^{m}`$ follow the joint distribution:
 
 ```math
 \begin{bmatrix}
@@ -22,7 +22,7 @@ For training data $'{\mathbf{X}} \in {\mathbb{R}}^{n \times d}'$, noisy training
 \end{pmatrix}.
 ```
 
-Here, $f$ and $\mu$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function, and $\kappa({\mathbf{X}},\mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa({\mathbf{X}}_i,\mathbf{Y}_j)$, where ${\mathbf{X}}_i$ denotes the $i$-th column of the dataset ${\mathbf{X}}$. Commonly used kernel functions are listed in the next sub-section ([Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels)). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa({\mathbf{x}},{\mathbf{y}}) = \exp(-||{\mathbf{x}}-{\mathbf{y}}||_2^2 / (2l^2))$ depends on the parameter $l$, typically known as the length-scale.
+Here, $f$ and $\mu$ are real numbers, and $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function. Commonly used kernel functions are listed in [Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(x,y) = \exp(-\|x-y\|_2^2 / (2 l^2) )$ depends on the parameter $l$, typically known as the length-scale.
 
 The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $\mu$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
 
