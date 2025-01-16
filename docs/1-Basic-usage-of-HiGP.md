@@ -7,7 +7,8 @@ HiGP is a Python3 library that can be installed using `pip`. We strongly recomme
 * Python 3.7 or a newer version,
 * NumPy 1.15 or a newer version,
 * SciPy 1.3 or a newer version,
-* PyTorch 1.3 or a newer version.
+* PyTorch 1.3 or a newer version,
+* Matplotlib, if you wish to plot your results.
 
 Then, simply run the following command in your conda environment to download and install the latest version of HiGP.
 
@@ -20,8 +21,8 @@ pip install HiGP
 We use a simple example to show the basic usage of HiGP. In this example, we train a RBF (Gaussian) kernel GP for a one-dimensional function. We will be modeling the function
 
 ```math
-y = 0.2 \, \sin(3 \pi x) \, \exp(4x) + \epsilon, \ 
-\epsilon \sim \mathcal{N}(0, 0.09)
+y = 0.2 \, \sin(3 \pi x) \, \exp(4x) + \epsilon, \quad 
+\epsilon \sim \! N(0, 0.09)
 ```
 
 First import the libraries we need to use:
