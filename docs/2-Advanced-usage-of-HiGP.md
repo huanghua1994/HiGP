@@ -128,7 +128,7 @@ Before proceeding in this section, please set a shell environment `REPOROOT` to 
 
 To define and use your own kernel:
 
-1. Edit `$REPOROOT/cpp-src/custom_kernel.cpp` to implement the kernel you want to use. If unmodified, it implements the Gaussian kernel as an example.
+1. Edit `$REPOROOT/cpp-src/kernels/custom_kernel.cpp` to implement the kernel you want to use. If unmodified, it implements the Gaussian kernel as an example.
 2. Rebuild the HiGP package on the local machine following the instructions below.
 3. Uninstall the old HiGP package and install the local build of the HiGP package.
 4. Use `kernel_type = 99` in your Python code when calling related HiGP functions.
