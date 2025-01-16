@@ -15,7 +15,7 @@ HiGP includes:
   to accelerate the iterative solvers.
 * Linear scaling hierarchical matrix algorithms from [H2Pack](https://dl.acm.org/doi/abs/10.1145/3412850)
   for handling large scale 2D/3D spatial data.
-* Efficient gradient calculations for the marginal log-likelihood to use in PyTorch optimizers.
+* Efficient gradient calculations for the negative log marginal likelihood, using preconditioned iterative solvers and preconditioned stochastic trace estimation.
 * Acceleration with GPUs is coming soon!
 
 To start using HiGP, refer to the online documentation:

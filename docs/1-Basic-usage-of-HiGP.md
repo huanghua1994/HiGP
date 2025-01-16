@@ -117,7 +117,7 @@ pred = higp.gpr_prediction(data_train=train_x,
                            label_train=train_y,
                            data_prediction=test_x,
                            kernel_type=1,
-                           pyparams=model.get_np_params())
+                           pyparams=model.get_params())
 pred_y = pred[0]
 std_y = pred[1]
 ```

@@ -4,7 +4,7 @@
 
 Gaussian processes (GPs) are a flexible, non-parametric Bayesian method for modeling complex data and are important in many scientific and engineering fields.
 
-For training data ${\mathbf{X}} \in {\mathbb{R}}^{n \times d}$, noisy training observations ${\mathbf{y}} \in {\mathbb{R}}^{n}$, and testing data ${\mathbf{X}}_{*} \in {\mathbb{R}}^{m \times d}$, a standard GP model assumes that the noise-free testing observations ${\mathbf{y}}_{*}  \in {\mathbb{R}}^{m}$ follow the joint distribution:
+For training data $'{\mathbf{X}} \in {\mathbb{R}}^{n \times d}'$, noisy training observations $'{\mathbf{y}} \in {\mathbb{R}}^{n}'$, and testing data $'{\mathbf{X}}_{*} \in {\mathbb{R}}^{m \times d}'$, a standard GP model assumes that the noise-free testing observations $'{\mathbf{y}}_{*}  \in {\mathbb{R}}^{m}'$ follow the joint distribution:
 
 ```math
 \begin{bmatrix}
@@ -24,7 +24,7 @@ For training data ${\mathbf{X}} \in {\mathbb{R}}^{n \times d}$, noisy training o
 
 Here, $f$ and $\mu$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function, and $\kappa({\mathbf{X}},\mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa({\mathbf{X}}_i,\mathbf{Y}_j)$, where ${\mathbf{X}}_i$ denotes the $i$-th column of the dataset ${\mathbf{X}}$. Commonly used kernel functions are listed in the next sub-section ([Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels)). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa({\mathbf{x}},{\mathbf{y}}) = \exp(-||{\mathbf{x}}-{\mathbf{y}}||_2^2 / (2l^2))$ depends on the parameter $l$, typically known as the length-scale.
 
-The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $\mu$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood (NLML):
+The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $\mu$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
 
 ```math
 L(\Theta) = \frac{1}{2}\left(\mathbf{y}^{\top}\widehat{\mathbf{K}}^{-1}\mathbf{y} + \log|\widehat{\mathbf{K}}| + n\log 2\pi\right),
@@ -66,7 +66,7 @@ HiGP also supports defining a custom kernel. Please see [Section 2.6 Defining an
 
 ## 2.3 Data structures
 
-To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points and each data point has $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$N$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
+To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points, with each data point having $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$'N'$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
 
 To set up and train a GP model, we also need to provide a label set. The label set should be an 1D NumPy array of length $N$.
 
@@ -74,7 +74,7 @@ Please use the `ascontiguousarray()` method in NumPy to ensure that the dataset 
 
 ## 2.4 Defining and training a GP model
 
-Assuming that we have prepared a training dataset `train_x` of shape $d$-by-$N$ and a training label set `train_y` of length $N$. Both `train_x` and `train_y` are of the `np_dtype` data type (`np_dtype = numpy.float32` or `np_dtype = numpy.float64`). We can easily define a GP regression model using the following four lines of code:
+Assuming that we have prepared a training dataset `train_x` of shape $d$-by-$'N'$ and a training label set `train_y` of length $N$. Both `train_x` and `train_y` are of the `np_dtype` data type (`np_dtype = numpy.float32` or `np_dtype = numpy.float64`). We can easily define a GP regression model using the following four lines of code:
 
 ```python
 torch_dtype = torch.float32 if np_dtype == numpy.float32 else torch.float64
@@ -102,11 +102,11 @@ for i in ranges(maxits):
 
 We also provide a wrapper function `gpr_torch_minimize()` that does the same work and gathers and prints each iteration's loss and hyperparameter values.
 
-After training the model, we can call `model.get_np_params()` to get the current (trained) hyperparameters. This function returns a NumPy 1D array of size 3, containing current pre-transformed  hyperparameters $[l, f, s]$.
+After training the model, we can call `model.get_params()` to get the current (trained) hyperparameters. This function returns a NumPy 1D array of size 3, containing current pre-transformed  hyperparameters $[l, f, s]$.
 
 ## 2.5 Make predictions
 
-Assuming that we have a trained model `model` and a test dataset `test_x` of size $d$-by-$M$. We can make predictions with the trained model using:
+Assuming that we have a trained model `model` and a test dataset `test_x` of size $d$-by-$`M`$. We can make predictions with the trained model using:
 
 ```python
 pred = higp.gpr_prediction(data_train=train_x, 
