@@ -20,11 +20,9 @@ pip install HiGP
 We use a simple example to show the basic usage of HiGP. In this example, we train a RBF (Gaussian) kernel GP for a one-dimensional function. We will be modeling the function
 
 ```math
-y = 0.2 \sin(3 \pi x) \exp(4x) + \epsilon, \ 
+y = 0.2 \, \sin(3 \pi x) \, \exp(4x) + \epsilon, \ 
 \epsilon \sim \mathcal{N}(0, 0.09)
 ```
-
-with 200 training examples, and testing on 1000 examples.
 
 First import the libraries we need to use:
 
@@ -33,10 +31,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import higp
-%matplotlib inline
 ```
 
-Now let's set up the training and testing data. We use 200 regularly spaced points on $[0, 1]$ which we evaluate the function on and add Gaussian noise to get the training labels.
+Now let's set up the training and testing data. For the training data, we 200 regularly spaced points on $[0, 1]$. For the testing data, we use 1000 random points selected
+uniformly on $[0, 1]$.
 
 ```python
 np.random.seed(42)
@@ -60,9 +58,15 @@ HiGP has an "easy GP regression" (ezgpr) interface to train the model and test t
 pred_y, std_y = higp.ezgpr_torch(train_x, train_y, test_x, test_y, adam_lr=0.1, adam_maxits=100)
 ```
 
-This "ezgpr" interface uses the RBF (Gaussian) kernel, [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) in the training with a learning rate 0.1 (`adam_lr=0.1`) and 100 training iterations (`adam_maxits=100`). We can also use Matern kernels in the ezgpr interface (see [Section 3.5 Method ezgpr_torch](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#35-method-ezgpr_torch)) It returns two arrays of the same size as `test_x`: `pred_y` is the prediction mean values, `std_y` is the prediction standard deviations.
+The "ezgpr_torch" interface uses the [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html).
+Optional parameters specify the learning rate and the maximum number 
+of Adam iterations.
+The interface uses the RBF (Gaussian) kernel function by default.
+The interface returns two arrays of the same size as `test_x`: `pred_y` is the predictive mean values, `std_y` is the predictive standard deviations.
+For more details, see 
+[Section 3.5 Method ezgpr_torch](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#35-method-ezgpr_torch).
 
-We can use the following code to visualize the prediction:
+We can use the following code to visualize the predictions:
 
 ```python
 plt.figure(figsize=(5, 5))
@@ -79,9 +83,10 @@ plt.close(fig)
 
 ![Example00 - prediction](figs/Example00_2.png)
 
-Instead of using the "ezgpr" interface, we can also manually define a model for this problem. Before defining the model, we first need to make sure the training and testing data are of the same data type:
+Instead of using the "ezgpr" interface, we can manually define a model for this problem and call the optimizer directly. Before defining the model, set the data type to be used and make sure the training and testing data have the data type expected by the optimizer:
 
 ```python
+import torch
 np_dtype = np.float32
 torch_dtype = torch.float32 if np_dtype == np.float32 else torch.float64
 train_x = train_x.astype(np_dtype)
@@ -90,7 +95,8 @@ test_x = test_x.astype(np_dtype)
 test_y = test_y.astype(np_dtype)
 ```
 
-Then we can set up a GP regression model in HiGP:
+Then we can set up a GP regression model, by specifying the training data
+and kernel function:
 
 ```python
 gpr_problem = higp.gprproblem.setup(data=train_x, label=train_y, kernel_type=1)
@@ -98,15 +104,13 @@ model = higp.GPRModel(gpr_problem, dtype=torch_dtype)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 ```
 
-Then, train the model:
+Then we call the optimizer directly to train the model:
 
 ```python
 higp.gpr_torch_minimize(model, optimizer, maxits=100, print_info=True)
 ```
 
-using 50 training iterations (`maxits=50`) and print the training information (`print_info=True`).
-
-Finally, we can do prediction with the trained model:
+Finally, we can ask the trained model for predictions:
 
 ```python
 pred = higp.gpr_prediction(data_train=train_x,
