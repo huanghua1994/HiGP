@@ -4,16 +4,16 @@
 
 HiGP is a Python3 library that can be installed using `pip`. We strongly recommend using HiGP in a [conda](https://www.anaconda.com/blog/understanding-conda-and-pip) environment. You may follow [this page](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) to install conda and create a conda environment. To install HiGP, make sure you have installed the following packages:
 
-* Python 3.7 or a newer version,
-* NumPy 1.15 or a newer version,
-* SciPy 1.3 or a newer version,
-* PyTorch 1.3 or a newer version,
+* Python 3.10 or a newer version,
+* NumPy 2.2.2 or a newer version,
+* SciPy 1.15 or a newer version,
+* PyTorch 2.5.1 or a newer version,
 * Matplotlib, if you wish to plot your results.
 
 Then, simply run the following command in your conda environment to download and install the latest version of HiGP.
 
 ```python
-pip install HiGP
+pip install higp
 ```
 
 ## 1.2 A simple example
@@ -96,11 +96,10 @@ test_x = test_x.astype(np_dtype)
 test_y = test_y.astype(np_dtype)
 ```
 
-Then we can set up a GP regression model, by specifying the training data
-and kernel function:
+Then we can set up a GP regression model, by specifying the training data and kernel function:
 
 ```python
-gpr_problem = higp.gprproblem.setup(data=train_x, label=train_y, kernel_type=1)
+gpr_problem = higp.gprproblem.setup(data=train_x, label=train_y, kernel_type=higp.GaussianKernel)
 model = higp.GPRModel(gpr_problem, dtype=torch_dtype)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 ```
@@ -117,7 +116,7 @@ Finally, we can ask the trained model for predictions:
 pred = higp.gpr_prediction(data_train=train_x,
                            label_train=train_y,
                            data_prediction=test_x,
-                           kernel_type=1,
+                           kernel_type=higp.GaussianKernel,
                            pyparams=model.get_params())
 pred_y = pred[0]
 std_y = pred[1]

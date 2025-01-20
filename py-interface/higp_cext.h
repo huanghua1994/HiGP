@@ -685,8 +685,8 @@ static char HiGP_Cext_gpc_prediction_help[] =
  */
 static PyMethodDef HiGP_Cext_module_methods[] = 
 {
-    {"gpr_prediction", (PyCFunction) HiGP_Cext_gpr_prediction, METH_VARARGS|METH_KEYWORDS, HiGP_Cext_gpr_prediction_help},
-    {"gpc_prediction", (PyCFunction) HiGP_Cext_gpc_prediction, METH_VARARGS|METH_KEYWORDS, HiGP_Cext_gpc_prediction_help},
+    {"gpr_prediction_", (PyCFunction) HiGP_Cext_gpr_prediction, METH_VARARGS|METH_KEYWORDS, HiGP_Cext_gpr_prediction_help},
+    {"gpc_prediction_", (PyCFunction) HiGP_Cext_gpc_prediction, METH_VARARGS|METH_KEYWORDS, HiGP_Cext_gpc_prediction_help},
     {NULL}
 };
 

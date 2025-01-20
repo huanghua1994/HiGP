@@ -4,6 +4,43 @@ import math
 import time
 import higp_cext
 from scipy.optimize import minimize
+from enum import Enum
+from types import SimpleNamespace
+
+class KernelType(Enum):
+    GaussianKernel = 1
+    Matern32Kernel = 2
+    Matern52Kernel = 3
+    CustomKernel = 99
+
+GaussianKernel = KernelType.GaussianKernel.value
+Matern32Kernel = KernelType.Matern32Kernel.value
+Matern52Kernel = KernelType.Matern52Kernel.value
+CustomKernel = KernelType.CustomKernel.value
+
+class MatvecType(Enum):
+    MatvecAuto = 0
+    MatvecAOT = 1
+    MatvecOTF = 2
+
+MatvecAuto = MatvecType.MatvecAuto.value
+MatvecAOT = MatvecType.MatvecAOT.value
+MatvecOTF = MatvecType.MatvecOTF.value
+
+def gpr_prediction(*args, **kwargs):
+    pred = higp_cext.gpr_prediction_(*args, **kwargs)
+    results = SimpleNamespace()
+    results.prediction_mean = pred[0]
+    results.prediction_stddev = pred[1]
+    return results
+
+def gpc_prediction(*args, **kwargs):
+    pred = higp_cext.gpc_prediction_(*args, **kwargs)
+    results = SimpleNamespace()
+    results.prediction_mean = pred[0]
+    results.prediction_label = pred[1]
+    results.prediction_stddev = pred[2]
+    return results
 
 def gpr_scipy_minimize(gprproblem,
                        l = 0.0,
@@ -40,8 +77,8 @@ def gpr_scipy_minimize(gprproblem,
         return (loss, grad.astype(np.float64))
 
     result = minimize(gpr_loss_func, np.hstack([l, f, s]),
-                      tol = tol, method = method, jac = jac, bounds = bounds,
-                      options={'maxiter': maxiter, 'maxls': maxls, 'gtol': gtol, 'disp': disp})
+                      tol=tol, method=method, jac=jac, bounds=bounds,
+                      options={'maxiter':maxiter, 'maxls':maxls, 'gtol':gtol, 'disp':disp})
     
     return result
 
@@ -111,7 +148,7 @@ class GPRModel(torch.nn.Module):
     def __init__(self, gprproblem, l = 0.0, f = 0.0, s = 0.0, dtype = torch.float32):
         super(GPRModel, self).__init__()
         self._gprproblem = gprproblem
-        self._default_scale = torch.tensor(1.0 / gprproblem.get_n(), dtype = dtype)
+        self._default_scale = torch.tensor(1.0 / gprproblem.get_n(), dtype=dtype)
         self._l = torch.nn.Parameter(torch.tensor(l, dtype = dtype))
         self._f = torch.nn.Parameter(torch.tensor(f, dtype = dtype))
         self._s = torch.nn.Parameter(torch.tensor(s, dtype = dtype))
@@ -153,7 +190,7 @@ def gpr_torch_minimize(model, optimizer, maxits = 100, scale = -1.0, print_info 
     if scale < 0:
         scale = model._default_scale
     else:
-        scale = torch.tensor(scale, dtype = model._dtype, requires_grad = False)
+        scale = torch.tensor(scale, dtype=model._dtype, requires_grad=False)
 
     loss_hist = np.empty(maxits+1)
     param_hist = np.empty((maxits+1, 3))
@@ -208,7 +245,7 @@ class GPCModel(torch.nn.Module):
         self._num_classes = num_classes
         self._params = torch.nn.Parameter(torch.tensor(np.tile(np.array([l, f, s]), num_classes), dtype = dtype))
         self._dtype = dtype
-        self._default_scale = torch.tensor(1.0 / gpcproblem.get_n(), dtype = dtype)
+        self._default_scale = torch.tensor(1.0 / gpcproblem.get_n(), dtype=dtype)
 
     def forward(self, x):
         return x
@@ -244,7 +281,7 @@ def gpc_torch_minimize(model, optimizer, maxits = 100, scale = -1.0, print_info 
     if scale < 0:
         scale = model._default_scale
     else:
-        scale = torch.tensor(scale, dtype = model._dtype, requires_grad = False)
+        scale = torch.tensor(scale, dtype=model._dtype, requires_grad=False)
 
     loss_hist = np.empty(maxits + 1)
     param_hist = np.empty((maxits + 1, model._num_classes * 3))
@@ -308,28 +345,29 @@ def ezgpr_torch(train_x,
         test_x  : PyTorch tensor / row-major NumPy array, testing data of size d-by-N (or array of size N if d = 1)
         test_y  : PyTorch tensor / row-major NumPy array, testing labels of size N
     Optional Inputs (default values):
-        l_init (0.0)        : Initial value of l (before transformation)
-        f_init (0.0)        : Initial value of f (before transformation)
-        s_init (0.0)        : Initial value of s (before transformation)
-        n_threads (-1)      : Number of threads. If negative will use the system's default
-        exact_gp (0)        : Whether to use exact matrix solve in GP computation
-        kernel_type (1)     : Kernel type. 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom
-        mvtype (0)          : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).
-        afn_rank_lq (50)    : The rank of the AFN preconditioner for Lanczos quadrature
-        afn_lfil_lq (0)     : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
-        afn_rank_pred (50)  : The rank of the AFN preconditioner forprediction
-        afn_lfil_pred (0)   : The fill-level of the Schur complement of the AFN preconditioner for prediction
-        niter_lq (10)       : Number of iterations for the Lanczos quadrature
-        nvec_lq (10)        : Number of vectors for the Lanczos quadrature
-        niter_pred (500)    : Number of the PCG solver iterations for the prediction
-        tol_pred (1e-5)     : Prediction PCG solver tolerance
-        seed (42)           : Random seed. If negative will not set seed.
-        adam_lr (0.1)       : Adam optimizer learning rate
-        adam_maxits (100)   : Max number of iterations for the Adam optimizer
-        dtype_torch (torch.float32) : PyTorch datatype
+        l_init (0.0)                      : Initial value of l (before transformation)
+        f_init (0.0)                      : Initial value of f (before transformation)
+        s_init (0.0)                      : Initial value of s (before transformation)
+        n_threads (-1)                    : Number of threads. If negative will use the system's default
+        exact_gp (0)                      : Whether to use exact matrix solve in GP computation
+        kernel_type (higp.GaussianKernel) : Kernel type, can be higp.GaussianKernel, higp.Matern32Kernel, higp.Matern52Kernel, or higp.CustomKernel.
+        mvtype (higp.MatvecAuto)          : Matvec type: can be higp.MatvecAuto, higp.MatvecAOT, or higp.MatvecOTF
+        afn_rank_lq (50)                  : The rank of the AFN preconditioner for Lanczos quadrature
+        afn_lfil_lq (0)                   : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
+        afn_rank_pred (50)                : The rank of the AFN preconditioner forprediction
+        afn_lfil_pred (0)                 : The fill-level of the Schur complement of the AFN preconditioner for prediction
+        niter_lq (10)                     : Number of iterations for the Lanczos quadrature
+        nvec_lq (10)                      : Number of vectors for the Lanczos quadrature
+        niter_pred (500)                  : Number of the PCG solver iterations for the prediction
+        tol_pred (1e-5)                   : Prediction PCG solver tolerance
+        seed (42)                         : Random seed. If negative will not set seed.
+        adam_lr (0.1)                     : Adam optimizer learning rate
+        adam_maxits (100)                 : Max number of iterations for the Adam optimizer
+        dtype_torch (torch.float32)       : PyTorch datatype
     Outputs:
-        pred_y: NumPy array, prediction labels
-        std_y: Predict standard deviation
+        pred : structure, containing two members
+            pred.prediction_mean   : NumPy array, prediction mean
+            pred.prediction_stddev : NumPy array, prediction standard deviation
     """
 
     if(seed >= 0):
@@ -381,42 +419,42 @@ def ezgpr_torch(train_x,
     N1 = train_x.shape[1]
     N2 = test_x.shape[1]
 
-    gprproblem = higp_cext.gprproblem.setup(data = train_x,
-                                            label = train_y,
-                                            kernel_type = kernel_type,
-                                            exact_gp = exact_gp,
-                                            mvtype = mvtype,
-                                            nthreads = n_threads,
-                                            rank = afn_rank_lq,
-                                            lfil = afn_lfil_lq,
-                                            niter = niter_lq,
-                                            nvec = nvec_lq)
+    gprproblem = higp_cext.gprproblem.setup(data=train_x,
+                                            label=train_y,
+                                            kernel_type=kernel_type,
+                                            exact_gp=exact_gp,
+                                            mvtype=mvtype,
+                                            nthreads=n_threads,
+                                            rank=afn_rank_lq,
+                                            lfil=afn_lfil_lq,
+                                            niter=niter_lq,
+                                            nvec=nvec_lq)
 
-    model = GPRModel(gprproblem, l = l_init, f = f_init, s = s_init, dtype = dtype_torch)
-    optimizer = torch.optim.Adam(model.parameters(), lr = adam_lr)
+    model = GPRModel(gprproblem, l=l_init, f=f_init, s=s_init, dtype=dtype_torch)
+    optimizer = torch.optim.Adam(model.parameters(), lr=adam_lr)
 
     t0 = time.time()
-    gpr_torch_minimize(model, optimizer, maxits = adam_maxits, scale = 1.0/N1, print_info = True)
+    gpr_torch_minimize(model, optimizer, maxits=adam_maxits, scale=1.0/N1, print_info=True)
     t1 = time.time()
     print("Training time: %g" % (t1-t0))
 
     t0 = time.time()
-    Pred = higp_cext.gpr_prediction(data_train = train_x,
-                                    label_train = train_y,
-                                    data_prediction = test_x,
-                                    kernel_type = kernel_type,
-                                    exact_gp = exact_gp,
-                                    mvtype = mvtype,
-                                    pyparams = model.get_params(),
-                                    nthreads = n_threads,
-                                    rank = afn_rank_pred,
-                                    lfil = afn_lfil_pred,
-                                    niter = niter_pred,
-                                    tol = tol_pred)
+    pred = gpr_prediction(data_train=train_x,
+                          label_train=train_y,
+                          data_prediction=test_x,
+                          kernel_type=kernel_type,
+                          exact_gp=exact_gp,
+                          mvtype=mvtype,
+                          pyparams=model.get_params(),
+                          nthreads=n_threads,
+                          rank=afn_rank_pred,
+                          lfil=afn_lfil_pred,
+                          niter=niter_pred,
+                          tol=tol_pred)
     t1 = time.time()
     print("Prediction time: %g" % (t1-t0))
 
-    rmse = np.linalg.norm(Pred[0] - test_y) / np.sqrt(float(N2))
+    rmse = np.linalg.norm(pred.prediction_mean - test_y) / np.sqrt(float(N2))
     print("RMSE: %g\n" % (rmse))
 
-    return (Pred[0], Pred[1])
+    return pred

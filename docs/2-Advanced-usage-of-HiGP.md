@@ -44,19 +44,19 @@ HiGP uses preconditioned Krylov subspace methods and preconditioned stochastic L
 
 Currently, HiGP supports three commonly used kernels: Gaussian (RBF) kernel, Matern 3/2 kernel, and Matern 5/2 kernel.
 
-The Gaussian kernel has a kernel id of 1 in HiGP. It is defined as:
+In HiGP, the Gaussian kernel can be used by specifying `kernel_type=higp.GaussianKernel`. This kernel is defined as:
 
 ```math
 K_{\text{Gaussian}}(x, y; l) = \exp \left( - \frac{\|x - y\|_2^2}{2 l^2} \right).
 ```
 
-The Matern 3/2 kernel has a kernel id of 2 in HiGP. It is defined as:
+In HiGP, the Matern 3/2 kernel can be used by specifying `kernel_type=higp.Matern32Kernel`. This kernel is defined as:
 
 ```math
 K_{\text{Matern32}}(x, y; l) = \left(1 + \sqrt{3} \frac{\|x - y\|_2}{l} \right) \exp \left( - \sqrt{3} \frac{\|x - y\|_2}{l} \right).
 ```
 
-The Matern 5/2 kernel has a kernel id of 3 in HiGP. It is defined as:
+In HiGP, the Matern 5/2 kernel can be used by specifying `kernel_type=higp.Matern52Kernel`. This kernel is defined as:
 
 ```math
 K_{\text{Matern52}}(x, y; l) = \left(1 + \sqrt{5} \frac{\|x - y\|_2}{l} + \frac{5 \|x - y\|_2^2}{3 l^2} \right) \exp \left( - \sqrt{5} \frac{\|x - y\|_2}{l} \right).
@@ -66,7 +66,7 @@ HiGP also supports defining a custom kernel. Please see [Section 2.6 Defining an
 
 ## 2.3 Data structures
 
-To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points, with each data point having $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$`N`$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
+To set up and train a GP model or make predictions using a GP model, we need to provide a dataset to HiGP. For a dataset containing $N$ data points, with each data point having $d$ dimensions (for example, a point in a 3D space has $d=3$), the dataset should be stored as a 2D $d$-by-$N$ NumPy row-major (the default matrix / tensor storage style in NumPy) matrix, where each column stores one data point. For a dataset with 1D data points, it can either be an 1D array of length $N$, or a 2D matrix of shape $(1, N)$.
 
 To set up and train a GP model, we also need to provide a label set. The label set should be an 1D NumPy array of length $N$.
 
@@ -74,11 +74,11 @@ Please use the `ascontiguousarray()` method in NumPy to ensure that the dataset 
 
 ## 2.4 Defining and training a GP model
 
-Assume that we have prepared a training dataset `train_x` with shape $d$-by-$`N`$ and a training label set `train_y` of length $N$, both `train_x` and `train_y` are of type `np_dtype` (`np_dtype = numpy.float32` or `np_dtype = numpy.float64`). We can then define a GP regression model using the following four lines of code:
+Assume that we have prepared a training dataset `train_x` with shape $d$-by-$N$ and a training label set `train_y` of length $N$, both `train_x` and `train_y` are of type `np_dtype` (`np_dtype=numpy.float32` or `np_dtype=numpy.float64`). We can then define a GP regression model using the following four lines of code:
 
 ```python
 torch_dtype = torch.float32 if np_dtype == numpy.float32 else torch.float64
-gprproblem = higp.gprproblem.setup(data=train_x, label=train_y, kernel_type=1)
+gprproblem = higp.gprproblem.setup(data=train_x, label=train_y, kernel_type=higp.GaussianKernel)
 model = higp.GPRModel(gprproblem, dtype=torch_dtype)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 ```
@@ -86,7 +86,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 In this code listing:
 
 * The first line defines the `torch_dtype` according to the `np_dtype` to ensure the GP training and PyTorch optimizer use the correct data type.
-* The second line creates a `higp.gprproblem` object that contains the training data and specifies the kernel function to use (`kernel_type=1` is the Gaussian kernel). We can use `kernel_type=2` for the Matern 3/2 kernel, or `kernel_type=3` for the Matern 5/2 kernel. This object computes of the model's error function and error function gradient at the current values of the hyperparameters.
+* The second line creates a `higp.gprproblem` object that contains the training data and specifies the kernel function to use (`kernel_type=higp.GaussianKernel` is the Gaussian kernel). This object computes of the model's error function and error function gradient at the current values of the hyperparameters.
 * The third line creates a `GPRModel` object using the `higp.gprproblem` object. This object registers the hyperparameters as PyTorch parameters and set the gradients of PyTorch parameters in each step for the PyTorch optimizer.
 * The forth line creates a [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) with learning rate = 0.1 (`lr=0.1`). We can also use other optimizers in PyTorch.
 
@@ -106,13 +106,13 @@ After training the model, we can call `model.get_params()` to get the current (t
 
 ## 2.5 Make predictions
 
-Assuming that we have a trained model `model` and a test dataset `test_x` of size $d$-by-$`M`$. We can make predictions with the trained model using:
+Assuming that we have a trained model `model` and a test dataset `test_x` of size $d$-by-$M$. We can make predictions with the trained model using:
 
 ```python
-pred = higp.gpr_prediction(data_train=train_x, 
-                           label_train=train_y, 
-                           data_prediction=test_x, 
-                           kernel_type=1, 
+pred = higp.gpr_prediction(data_train=train_x,
+                           label_train=train_y,
+                           data_prediction=test_x,
+                           kernel_type=higp.GaussianKernel,
                            pyparams=model.get_params())
 pred_y = pred[0]
 std_y = pred[1]
@@ -128,15 +128,25 @@ Before proceeding in this section, please set a shell environment `REPOROOT` to 
 
 To define and use your own kernel:
 
-1. Edit `$REPOROOT/cpp-src/kernels/custom_kernel.cpp` to implement the kernel you want to use. If unmodified, it implements the Gaussian kernel as an example.
+1. Edit `$REPOROOT/cpp-src/kernels/custom_kernel.cpp` to implement the kernel you want to use. Please read the "notes for implementing a custom kernel" at the beginning of this file before making modifications. If unmodified, it implements the Gaussian kernel as an example.
 2. Rebuild the HiGP package on the local machine following the instructions below.
 3. Uninstall the old HiGP package and install the local build of the HiGP package.
-4. Use `kernel_type = 99` in your Python code when calling related HiGP functions.
+4. Use `kernel_type=higp.CustomKernel` in your Python code when calling related HiGP functions.
 
-To use a custom kernel, you need to build the HiGP package on your local machine instead of installing the release versions using `pip`. We also strongly suggest building the HiGP Python package in a conda environment. To build the HiGP Python package, you need:
+To use a custom kernel, you need to build the HiGP package on your local machine instead of installing the release versions using `pip`. We also strongly suggest building the HiGP Python package in a conda environment. To build the HiGP Python package, we recommend using:
 
-* Python 3.7 or a newer version,
-* NumPy 1.15 or a newer version.
+* Python 3.10 or a newer version,
+* NumPy 2.2.2 or a newer version.
+
+You may use the following commands in bash to create a build environment using `conda`:
+
+```bash
+conda create -n py3.10 python=3.10 -y
+conda activate py3.10
+conda install -y libopenblas=*=*openmp*
+conda install -y "blas=*=openblas"
+conda install -y numpy=2.2.2
+```
 
 Run the following shell commands:
 

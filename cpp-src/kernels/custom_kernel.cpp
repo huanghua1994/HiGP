@@ -8,6 +8,35 @@
 #include "pdist2_kernel.h"
 #include "dispatch_kernels.h"
 
+/* =============== Notes for implementing a custom kernel =============== 
+ * This is the file you need to modify for implementing a custom kernel.
+ * You need to modify two functions in this file: custom_123d() for 
+ * computing the kernel matrix for 1D, 2D, and 3D data points, and 
+ * custom_generic() for computing the kernel matrix for any dimension
+ * data points. 
+ *
+ * The arguments of custom_123d() and custom_generic() are listed as below:
+ * Input arguments:
+ *   n0  : Number of data points in the first data set
+ *   ld0 : Leading dimension (>= n0) of the c0 matrix
+ *   c0  : Size ld0-by-dim, column-major. Each row stores one data point
+ *   n1  : Number of data points in the second data set
+ *   ld1 : Leading dimension (>= n1) of the c1 matrix
+ *   c1  : Size ld1-by-dim, column-major. Each row stores one data point
+ *   dim : Dimension of data points
+ *   l   : Length-scale parameter
+ *   ldm : Leading dimension (>= n0) of the k_mat and dl_mat
+ * Output arguments:
+ *   k_mat  : Size ldm-by-n1, column-major, kernel matrix
+ *   dl_mat : Size ldm-by-n1, column-major, derivative of kernel matrix w.r.t. length-scale
+ * 
+ * Do not change the arguments of custom_123d() and custom_generic().
+ * You only need to modify the computations inside these functions.
+ * Currently, these functions first compute the pairwise squared distance
+ * (d2 in the code) of data points, then compute the kernel function using
+ * d2 and l (length scale).
+*/ 
+
 // Custom kernel, currently implemented as the Gaussian kernel:
 // K(d, l) = exp(-d^2 / (2 * l^2))
 // d K(d, l) / d l = (d^2 / l^3) * exp(-d^2 / (2 * l^2))

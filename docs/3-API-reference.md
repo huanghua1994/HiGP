@@ -87,25 +87,25 @@ Easy to use GP regression interface with PyTorch using Adam optimizer.
   * `test_x`  : PyTorch tensor / row-major NumPy array, testing data of size `d`-by-`N` (or array of size `N` if `d = 1`)
   * `test_y`  : PyTorch tensor / row-major NumPy array, testing labels of size `N`
 * Optional Inputs (default value):
-  * `l_init (0.0)`        : Initial value of `l` (before transformation)
-  * `f_init (0.0)`        : Initial value of `f` (before transformation)
-  * `s_init (0.0)`        : Initial value of `s` (before transformation)
-  * `n_threads (-1)`      : Number of threads. If negative will use the system's default
-  * `exact_gp (0)`        : Whether to use exact matrix solve in GP computation
-  * `kernel_type (1)`     : Kernel type. 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom
-  * `mvtype (0)`          : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).
-  * `afn_rank_lq (50)`    : The rank of the AFN preconditioner for Lanczos quadrature
-  * `afn_lfil_lq (0)`     : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
-  * `afn_rank_pred (50)`  : The rank of the AFN preconditioner forprediction
-  * `afn_lfil_pred (0)`   : The fill-level of the Schur complement of the AFN preconditioner for prediction
-  * `niter_lq (10)`       : Number of iterations for the Lanczos quadrature
-  * `nvec_lq (10)`        : Number of vectors for the Lanczos quadrature
-  * `niter_pred (500)`    : Number of the PCG solver iterations for the prediction
-  * `tol_pred (1e-5)`     : Prediction PCG solver tolerance
-  * `seed (42)`           : Random seed. If negative will not set seed.
-  * `adam_lr (0.1)`       : Adam optimizer learning rate
-  * `adam_maxits (100)`   : Max number of iterations for the Adam optimizer
-  * `dtype_torch (torch.float32)` : PyTorch datatype
+  * `l_init (0.0)`                      : Initial value of `l` (before transformation)
+  * `f_init (0.0)`                      : Initial value of `f` (before transformation)
+  * `s_init (0.0)`                      : Initial value of `s` (before transformation)
+  * `n_threads (-1)`                    : Number of threads. If negative will use the system's default
+  * `exact_gp (0)`                      : Whether to use exact matrix solve in GP computation
+  * `kernel_type (higp.GaussianKernel)` : Kernel type, can be `higp.GaussianKernel`, `higp.Matern32Kernel`, `higp.Matern52Kernel`, or `higp.CustomKernel`.
+  * `mvtype (higp.MatvecAuto)`          : Matvec type: can be `higp.MatvecAuto`, `higp.MatvecAOT`, or `higp.MatvecOTF`.
+  * `afn_rank_lq (50)`                  : The rank of the AFN preconditioner for Lanczos quadrature
+  * `afn_lfil_lq (0)`                   : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
+  * `afn_rank_pred (50)`                : The rank of the AFN preconditioner forprediction
+  * `afn_lfil_pred (0)`                 : The fill-level of the Schur complement of the AFN preconditioner for prediction
+  * `niter_lq (10)`                     : Number of iterations for the Lanczos quadrature
+  * `nvec_lq (10)`                      : Number of vectors for the Lanczos quadrature
+  * `niter_pred (500)`                  : Number of the PCG solver iterations for the prediction
+  * `tol_pred (1e-5)`                   : Prediction PCG solver tolerance
+  * `seed (42)`                         : Random seed. If negative will not set seed.
+  * `adam_lr (0.1)`                     : Adam optimizer learning rate
+  * `adam_maxits (100)`                 : Max number of iterations for the Adam optimizer
+  * `dtype_torch (torch.float32)`       : PyTorch datatype
 * Outputs:
   * `pred_y`: NumPy array, prediction labels
   * `std_y`: Predict standard deviation

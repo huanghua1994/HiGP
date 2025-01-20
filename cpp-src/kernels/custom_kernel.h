@@ -1,6 +1,8 @@
 #ifndef __CUSTOM_KERNEL_H__
 #define __CUSTOM_KERNEL_H__
 
+// Note: for implementing a custom kernel, you do not need to modify this file
+
 #ifdef __cplusplus
 extern "C" {
 #endif
