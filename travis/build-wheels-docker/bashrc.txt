@@ -1,0 +1,30 @@
+function git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+
+function markup_git_branch {
+  if [[ "x$1" != "x" ]]; then
+    git_last_msg=$(git status 2> /dev/null | tail -n1)
+    if [[ $git_last_msg == "nothing to commit"* ]]; then
+      echo -e '(git:'"$1"')'
+    else
+      echo -e '(git:'"$1*"')'
+    fi
+  fi
+}
+
+export PS1='\n\[\e[1;36m\]\u\[\e[1;35m\]@\[\e[1;33m\]\h:\[\e[1;31m\]\w\[\e[1;36m\] $(markup_git_branch $(git_branch)) \n$ \[\e[0m\]'
+
+if [ -f /usr/share/modules/init/bash ]; then
+    source /usr/share/modules/init/bash
+fi
+
+alias ls="ls --color=auto -h"
+alias ll="ls $LS_OPTIONS -l"
+alias la="ls $LS_OPTIONS -lA"
+alias gst="git status"
+alias ga="git add"
+alias gco="git checkout"
+alias gd="git diff"
+alias chx="chmod +x"
+alias lrth="ls -lrth"

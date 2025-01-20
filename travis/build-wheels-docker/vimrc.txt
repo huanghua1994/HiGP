@@ -1,0 +1,27 @@
+set nu
+set cindent
+set softtabstop=4
+set tabstop=4
+set shiftwidth=4
+set fenc=utf-8
+set enc=utf-8
+set expandtab
+set cursorline
+
+syntax on
+
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
+
+au BufNewFile,BufRead *.cu  set ft=cuda
+au BufNewFile,BufRead *.cuh set ft=cuda
+au BufNewFile,BufRead *.txx set ft=cpp
+
+if &diff
+    colorscheme evening
+    hi DiffAdd      gui=none    guifg=NONE          guibg=#bada9f
+    hi DiffChange   gui=none    guifg=NONE          guibg=#e5d5ac
+    hi DiffDelete   gui=bold    guifg=#ff8080       guibg=#ffb0b0
+    hi DiffText     gui=none    guifg=NONE          guibg=#8cbee2
+endif
