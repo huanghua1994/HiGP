@@ -61,13 +61,7 @@ pred = higp.ezgpr_torch(train_x, train_y, test_x, test_y, adam_lr=0.1, adam_maxi
 # pred.prediction_stddev is thepredictive standard deviations
 ```
 
-The "ezgpr_torch" interface uses the [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html).
-Optional parameters specify the learning rate and the maximum number 
-of Adam iterations.
-The interface uses the RBF (Gaussian) kernel function by default.
-The interface returns two arrays of the same size as `test_x`: `pred.prediction_mean` is the predictive mean values, `pred.prediction_stddev` is the predictive standard deviations.
-For more details, see 
-[Section 3.5 Method ezgpr_torch](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#35-method-ezgpr_torch).
+The "ezgpr_torch" interface uses the [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html). Optional parameters specify the learning rate and the maximum number of Adam iterations. The interface uses the RBF (Gaussian) kernel function by default, and it returns two arrays of the same size as `test_x`: `pred.prediction_mean` is the predictive mean values, `pred.prediction_stddev` is the predictive standard deviations. For more details, see [Section 3.5 Method ezgpr_torch](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#35-method-ezgpr_torch).
 
 We can use the following code to visualize the predictions:
 

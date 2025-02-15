@@ -17,20 +17,20 @@ For training data ${\mathbf{X}} \in {\mathbb{R}}^{n \times d}$, noisy training o
     \mathbf{0},
     f^2
     \begin{bmatrix}
-        \kappa({\mathbf{X}},{\mathbf{X}})+\mu\mathbf{I} & \kappa({\mathbf{X}},{\mathbf{X}}_{*} )\\ \kappa({\mathbf{X}}_{*} ,{\mathbf{X}}) & \kappa({\mathbf{X}}_{*} ,{\mathbf{X}}_{*} )
+        \kappa({\mathbf{X}},{\mathbf{X}}) + s \mathbf{I} & \kappa({\mathbf{X}},{\mathbf{X}}_{*} )\\ \kappa({\mathbf{X}}_{*} ,{\mathbf{X}}) & \kappa({\mathbf{X}}_{*} ,{\mathbf{X}}_{*} )
     \end{bmatrix}
 \end{pmatrix}.
 ```
 
-Here, $f$ and $\mu$ are real numbers, and $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function. Commonly used kernel functions are listed in [Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(x,y) = \exp(-\|x-y\|_2^2 / (2 l^2) )$ depends on the parameter $l$, typically known as the length-scale.
+Here, $f$ and $s$ are real numbers, and $\kappa({\mathbf{x}},{\mathbf{y}}): {\mathbb{R}}^d \times {\mathbb{R}}^d \rightarrow {\mathbb{R}}$ is a kernel function. Commonly used kernel functions are listed in [Section 2.2 Kernels](https://github.com/huanghua1994/HiGP/blob/main/docs/2-Advanced-usage-of-HiGP.md#22-kernels). These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(x,y) = \exp(-\|x-y\|_2^2 / (2 l^2) )$ depends on the parameter $l$, typically known as the length-scale.
 
-The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $\mu$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
+The quality of the model depends on the selection of the kernel function and the kernel parameters. HiGP focuses on optimizing kernel parameters and assumes that an appropriate kernel has been selected. To find the optimal $s$, $f$, and $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
 
 ```math
 L(\Theta) = \frac{1}{2}\left(\mathbf{y}^{\top}\widehat{\mathbf{K}}^{-1}\mathbf{y} + \log|\widehat{\mathbf{K}}| + n\log 2\pi\right),
 ```
 
-where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $\kappa({\mathbf{X}},{\mathbf{X}})+\mu\mathbf{I}$ and $\Theta$ denotes the hyperparameter set, which is $(\mu,f,l)$ for the above kernels. The optimization process usually requires the following gradient:
+where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $\kappa({\mathbf{X}},{\mathbf{X}}) + s \mathbf{I}$ and $\Theta$ denotes the hyperparameter set, which is $(s,f,l)$ for the above kernels. The optimization process usually requires the following gradient:
 
 ```math
 \frac{\partial L}{\partial \theta} =
@@ -90,7 +90,7 @@ In this code listing:
 * The third line creates a `GPRModel` object using the `higp.gprproblem` object. This object registers the hyperparameters as PyTorch parameters and set the gradients of PyTorch parameters in each step for the PyTorch optimizer.
 * The forth line creates a [PyTorch Adam optimizer](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) with learning rate = 0.1 (`lr=0.1`). We can also use other optimizers in PyTorch.
 
-The default initial pre-transformed hyperparameters $[l, f, s]$ are $[0, 0, 0]$. We can call `model.set_params()` with a NumPy 1D array of length 3 to manually set the pre-transformed hyperparameters.
+The default initial pre-transformed (please see [Section 3.1 Definition of hyperparameters](https://github.com/huanghua1994/HiGP/blob/main/docs/3-API-reference.md#31-definition-of-hyperparameters) for the explanation of transform) hyperparameters $[l, f, s]$ are $[0, 0, 0]$. We can call `model.set_params()` with a NumPy 1D array of length 3 to manually set the pre-transformed hyperparameters.
 
 After creating a GP model and a PyTorch optimizer, we can train the model using three lines of code:
 
@@ -102,7 +102,7 @@ for i in ranges(maxits):
 
 We also provide a wrapper function `gpr_torch_minimize()` that does the same work and gathers and prints each iteration's loss and hyperparameter values.
 
-After training the model, we can call `model.get_params()` to get the current (trained) hyperparameters. This function returns a NumPy 1D array of size 3, containing current pre-transformed  hyperparameters $[l, f, s]$.
+After training the model, we can call `model.get_params()` to get the current (trained) hyperparameters. This function returns a NumPy 1D array of size 3, containing current pre-transformed hyperparameters $[l, f, s]$.
 
 ## 2.5 Make predictions
 
@@ -114,16 +114,14 @@ pred = higp.gpr_prediction(data_train=train_x,
                            data_prediction=test_x,
                            kernel_type=higp.GaussianKernel,
                            pyparams=model.get_params())
-pred_y = pred[0]
-std_y = pred[1]
 ```
 
 `train_x`, `train_y`, and `kernel_type` are the same as what we used for calling `higp.gprproblem.setup()`, `data_prediction=test_x` specifies the prediction dataset, and `pyparams=model.get_params()` uses the trained pre-transformed hyperparameters for prediction. If we want to make a prediction with another set of hyperparameters, we simply provide a NumPy 1D array of length 3 containing pre-transformed hyperparameters $[l, f, s]$.
 
-The returned arrays `pred_y` and `std_y` are NumPy 1D arrays of length $M$. `pred_y` is the predicted mean values, and `std_y` is the standard deviation of prediction. For each prediction point `test_x[:, i]`, its prediction mean is `pred_y[i]`, and its 95\% prediction confidence range is `[pred_y[i] - 1.96 * std_y[i], pred_y[i] + 1.96 * std_y[i]]`.
+The returned structure `pred` has two members: `pred.prediction_mean` and `pred.prediction_stddev`, they are NumPy 1D arrays of length $M$. `prediction_mean` is the predicted mean values, and `prediction_stddev` is the standard deviation of prediction. For each prediction point `test_x[:, i]`, its prediction mean is `prediction_mean[i]`, and its 95\% prediction confidence range is `[prediction_mean[i] - 1.96 * prediction_stddev[i], prediction_mean[i] + 1.96 * prediction_stddev[i]]`.
 
 ## 2.6 Defining and using a custom kernel
- 
+
 Before proceeding in this section, please set a shell environment `REPOROOT` to the root directory of the HiGP repository.
 
 To define and use your own kernel:

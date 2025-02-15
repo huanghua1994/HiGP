@@ -340,11 +340,11 @@ def ezgpr_torch(train_x,
     """
     Easy to use GP regression interface with PyTorch using Adam optimizer
     Inputs:
-        train_x : PyTorch tensor / row-major NumPy array, training data of size d-by-N (or array of size N if d = 1)
-        train_y : PyTorch tensor / row-major NumPy array, training labels of size N
-        test_x  : PyTorch tensor / row-major NumPy array, testing data of size d-by-N (or array of size N if d = 1)
-        test_y  : PyTorch tensor / row-major NumPy array, testing labels of size N
+        train_x : PyTorch tensor / row-major NumPy array, training data of size d-by-N1 (or array of size N1 if d = 1)
+        train_y : PyTorch tensor / row-major NumPy array, training labels of size N1
+        test_x  : PyTorch tensor / row-major NumPy array, testing data of size d-by-N2 (or array of size N2 if d = 1)
     Optional Inputs (default values):
+        test_y (None)                     : PyTorch tensor / row-major NumPy array, testing labels of size N2, only used for RMSE calculation
         l_init (0.0)                      : Initial value of l (before transformation)
         f_init (0.0)                      : Initial value of f (before transformation)
         s_init (0.0)                      : Initial value of s (before transformation)
@@ -366,8 +366,8 @@ def ezgpr_torch(train_x,
         dtype_torch (torch.float32)       : PyTorch datatype
     Outputs:
         pred : structure, containing two members
-            pred.prediction_mean   : NumPy array, prediction mean
-            pred.prediction_stddev : NumPy array, prediction standard deviation
+            pred.prediction_mean   : NumPy array, size N2, prediction mean values
+            pred.prediction_stddev : NumPy array, size N2, prediction standard deviation
     """
 
     if(seed >= 0):
@@ -454,7 +454,8 @@ def ezgpr_torch(train_x,
     t1 = time.time()
     print("Prediction time: %g" % (t1-t0))
 
-    rmse = np.linalg.norm(pred.prediction_mean - test_y) / np.sqrt(float(N2))
-    print("RMSE: %g\n" % (rmse))
+    if test_y is not None:
+        rmse = np.linalg.norm(pred.prediction_mean - test_y) / np.sqrt(float(N2))
+        print("RMSE: %g\n" % (rmse))
 
     return pred
