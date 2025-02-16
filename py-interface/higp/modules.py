@@ -11,21 +11,21 @@ class KernelType(Enum):
     GaussianKernel = 1
     Matern32Kernel = 2
     Matern52Kernel = 3
-    CustomKernel = 99
+    CustomKernel   = 99
 
 GaussianKernel = KernelType.GaussianKernel.value
 Matern32Kernel = KernelType.Matern32Kernel.value
 Matern52Kernel = KernelType.Matern52Kernel.value
-CustomKernel = KernelType.CustomKernel.value
+CustomKernel   = KernelType.CustomKernel.value
 
 class MatvecType(Enum):
     MatvecAuto = 0
-    MatvecAOT = 1
-    MatvecOTF = 2
+    MatvecAOT  = 1
+    MatvecOTF  = 2
 
 MatvecAuto = MatvecType.MatvecAuto.value
-MatvecAOT = MatvecType.MatvecAOT.value
-MatvecOTF = MatvecType.MatvecOTF.value
+MatvecAOT  = MatvecType.MatvecAOT.value
+MatvecOTF  = MatvecType.MatvecOTF.value
 
 def gpr_prediction(*args, **kwargs):
     pred = higp_cext.gpr_prediction_(*args, **kwargs)
@@ -37,8 +37,8 @@ def gpr_prediction(*args, **kwargs):
 def gpc_prediction(*args, **kwargs):
     pred = higp_cext.gpc_prediction_(*args, **kwargs)
     results = SimpleNamespace()
-    results.prediction_mean = pred[0]
-    results.prediction_label = pred[1]
+    results.prediction_label = pred[0]
+    results.prediction_mean = pred[1]
     results.prediction_stddev = pred[2]
     return results
 
@@ -143,7 +143,7 @@ class GPRModel(torch.nn.Module):
             scale (-1) : Scale for loss; if < 0, will use 1 / N (N is the number of training data points)
     get_params(): Return model parameters
         Output:
-            np : NumPy 1D array of length 3, $[l, f, s]$
+            param: NumPy 1D array of length 3, (`l`, `f`, `s`)
     """
     def __init__(self, gprproblem, l = 0.0, f = 0.0, s = 0.0, dtype = torch.float32):
         super(GPRModel, self).__init__()
@@ -237,13 +237,13 @@ class GPCModel(torch.nn.Module):
             dtype (torch.float32)   : torch datatype
     get_params(): Return model parameters
         Output:
-            np array of parameters
+            param: NumPy 1D array of length `3 * num_classes`, (`l1`, `f1`, `s1`, `l2`, `f2`, `s2`, ...)
     """
     def __init__(self, gpcproblem, num_classes, l = 0.0, f = 0.0, s = 0.0, dtype = torch.float32):
         super(GPCModel, self).__init__()
         self._gpcproblem = gpcproblem
         self._num_classes = num_classes
-        self._params = torch.nn.Parameter(torch.tensor(np.tile(np.array([l, f, s]), num_classes), dtype = dtype))
+        self._params = torch.nn.Parameter(torch.tensor(np.tile(np.array([l, f, s]), num_classes), dtype=dtype))
         self._dtype = dtype
         self._default_scale = torch.tensor(1.0 / gpcproblem.get_n(), dtype=dtype)
 
@@ -335,7 +335,8 @@ def ezgpr_torch(train_x,
                 dtype_torch = torch.float32,
                 seed = 42,
                 adam_lr = 0.01,
-                adam_maxits = 100):
+                adam_maxits = 100,
+                print_info = True):
 
     """
     Easy to use GP regression interface with PyTorch using Adam optimizer
@@ -364,6 +365,7 @@ def ezgpr_torch(train_x,
         adam_lr (0.1)                     : Adam optimizer learning rate
         adam_maxits (100)                 : Max number of iterations for the Adam optimizer
         dtype_torch (torch.float32)       : PyTorch datatype
+        print_info (True)                 : Print iteration and hyperparameters or not
     Outputs:
         pred : structure, containing two members
             pred.prediction_mean   : NumPy array, size N2, prediction mean values
@@ -411,7 +413,7 @@ def ezgpr_torch(train_x,
     else:
         raise ValueError("Input testing label format is not supported")
     if test_y.ndim == 2:
-            test_y = test_y.squeeze()
+        test_y = test_y.squeeze()
 
     print("Read %d training / %d test data points" % (train_x.shape[1], test_x.shape[1]))
     print("Data dimension: %d" % train_x.shape[0])
@@ -425,8 +427,8 @@ def ezgpr_torch(train_x,
                                             exact_gp=exact_gp,
                                             mvtype=mvtype,
                                             nthreads=n_threads,
-                                            rank=afn_rank_lq,
-                                            lfil=afn_lfil_lq,
+                                            afn_rank=afn_rank_lq,
+                                            afn_lfil=afn_lfil_lq,
                                             niter=niter_lq,
                                             nvec=nvec_lq)
 
@@ -434,7 +436,7 @@ def ezgpr_torch(train_x,
     optimizer = torch.optim.Adam(model.parameters(), lr=adam_lr)
 
     t0 = time.time()
-    gpr_torch_minimize(model, optimizer, maxits=adam_maxits, scale=1.0/N1, print_info=True)
+    gpr_torch_minimize(model, optimizer, maxits=adam_maxits, scale=1.0/N1, print_info=print_info)
     t1 = time.time()
     print("Training time: %g" % (t1-t0))
 
@@ -445,10 +447,10 @@ def ezgpr_torch(train_x,
                           kernel_type=kernel_type,
                           exact_gp=exact_gp,
                           mvtype=mvtype,
-                          pyparams=model.get_params(),
+                          gp_params=model.get_params(),
                           nthreads=n_threads,
-                          rank=afn_rank_pred,
-                          lfil=afn_lfil_pred,
+                          afn_rank=afn_rank_pred,
+                          afn_lfil=afn_lfil_pred,
                           niter=niter_pred,
                           tol=tol_pred)
     t1 = time.time()

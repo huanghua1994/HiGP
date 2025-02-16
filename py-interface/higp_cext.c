@@ -660,9 +660,9 @@ static PyObject* PrecondObject_matmul(PrecondObject* self, PyObject* args, PyObj
 static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, PyObject *kwds)
 {
     // Parse parameters
-    PyArrayObject *pyparams = NULL;
-    static char *kwlist[] = {"pyparams", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &pyparams))
+    PyArrayObject *gp_params = NULL;
+    static char *kwlist[] = {"gp_params", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &gp_params))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -674,7 +674,7 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
     {
         case FP64:
         {
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
 
             double *loss = (double*) self->_loss;
             double *grad = (double*) self->_grad;
@@ -682,20 +682,20 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
             if (self->_norun)
             {
                 self->_norun = 0;
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
             else
             {
-                if (param[1] == pyparams_pt[0] && param[2] == pyparams_pt[1] && param[3] == pyparams_pt[2])
+                if (param[1] == gp_params_pt[0] && param[2] == gp_params_pt[1] && param[3] == gp_params_pt[2])
                 {
                     result_float = PyFloat_FromDouble(loss[0]);
                     return result_float;
                 }
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
 
             if (self->_exact_gp)
@@ -717,7 +717,7 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
         }
         case FP32:
         {
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
 
             float *loss = (float*)self->_loss;
             float *grad = (float*)self->_grad;
@@ -725,20 +725,20 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
             if (self->_norun)
             {
                 self->_norun = 0;
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
             else
             {
-                if (param[1] == pyparams_pt[0] && param[2] == pyparams_pt[1] && param[3] == pyparams_pt[2])
+                if (param[1] == gp_params_pt[0] && param[2] == gp_params_pt[1] && param[3] == gp_params_pt[2])
                 {
                     result_float = PyFloat_FromDouble((double)loss[0]);
                     return result_float;
                 }
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
 
             if (self->_exact_gp)
@@ -770,10 +770,10 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
 static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, PyObject *kwds)
 {
     // Parse parameters
-    PyArrayObject *pyparams = NULL;
-    PyArrayObject *pyparams_out = NULL;
-    static char *kwlist[] = {"pyparams", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &pyparams))
+    PyArrayObject *gp_params = NULL;
+    PyArrayObject *gp_params_out = NULL;
+    static char *kwlist[] = {"gp_params", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &gp_params))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -787,10 +787,10 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
         case FP64:
         {
             npy_intp dim[] = {3};
-            pyparams_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
+            gp_params_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
             
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
-            double *pyparams_out_pt = (double *) PyArray_DATA(pyparams_out);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
+            double *gp_params_out_pt = (double *) PyArray_DATA(gp_params_out);
 
             double *loss = (double*) self->_loss;
             double *grad = (double*) self->_grad;
@@ -798,24 +798,24 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
             if (self->_norun)
             {
                 self->_norun = 0;
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
             else
             {
-                if (param[1] == pyparams_pt[0] && param[2] == pyparams_pt[1] && param[3] == pyparams_pt[2])
+                if (param[1] == gp_params_pt[0] && param[2] == gp_params_pt[1] && param[3] == gp_params_pt[2])
                 {
                     PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble(loss[0]));
-                    pyparams_out_pt[0] = grad[0];
-                    pyparams_out_pt[1] = grad[1];
-                    pyparams_out_pt[2] = grad[2];
-                    PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+                    gp_params_out_pt[0] = grad[0];
+                    gp_params_out_pt[1] = grad[1];
+                    gp_params_out_pt[2] = grad[2];
+                    PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
                     return result_tuple;
                 }
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
 
             if (self->_exact_gp)
@@ -833,19 +833,19 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
             }
             
             PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble(loss[0]));
-            pyparams_out_pt[0] = grad[0];
-            pyparams_out_pt[1] = grad[1];
-            pyparams_out_pt[2] = grad[2];
-            PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+            gp_params_out_pt[0] = grad[0];
+            gp_params_out_pt[1] = grad[1];
+            gp_params_out_pt[2] = grad[2];
+            PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
             break;
         }
         case FP32:
         {
             npy_intp dim[] = {3};
-            pyparams_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
+            gp_params_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
             
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
-            float *pyparams_out_pt = (float *) PyArray_DATA(pyparams_out);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
+            float *gp_params_out_pt = (float *) PyArray_DATA(gp_params_out);
 
             float *loss = (float*)self->_loss;
             float *grad = (float*)self->_grad;
@@ -853,24 +853,24 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
             if (self->_norun)
             {
                 self->_norun = 0;
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
             else
             {
-                if (param[1] == pyparams_pt[0] && param[2] == pyparams_pt[1] && param[3] == pyparams_pt[2])
+                if (param[1] == gp_params_pt[0] && param[2] == gp_params_pt[1] && param[3] == gp_params_pt[2])
                 {
                     PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble((double)loss[0]));
-                    pyparams_out_pt[0] = grad[0];
-                    pyparams_out_pt[1] = grad[1];
-                    pyparams_out_pt[2] = grad[2];
-                    PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+                    gp_params_out_pt[0] = grad[0];
+                    gp_params_out_pt[1] = grad[1];
+                    gp_params_out_pt[2] = grad[2];
+                    PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
                     return result_tuple;
                 }
-                param[1] = pyparams_pt[0];
-                param[2] = pyparams_pt[1];
-                param[3] = pyparams_pt[2];
+                param[1] = gp_params_pt[0];
+                param[2] = gp_params_pt[1];
+                param[3] = gp_params_pt[2];
             }
             if (self->_exact_gp)
             {
@@ -887,10 +887,10 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
             }
             
             PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble((double)loss[0]));
-            pyparams_out_pt[0] = grad[0];
-            pyparams_out_pt[1] = grad[1];
-            pyparams_out_pt[2] = grad[2];
-            PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+            gp_params_out_pt[0] = grad[0];
+            gp_params_out_pt[1] = grad[1];
+            gp_params_out_pt[2] = grad[2];
+            PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
             break;
         }
         default:
@@ -918,9 +918,9 @@ static PyObject* GPRProblemObject_get_n(GPRProblemObject* self)
 static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, PyObject *kwds)
 {
     // Parse parameters
-    PyArrayObject *pyparams = NULL;
-    static char *kwlist[] = {"pyparams", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &pyparams))
+    PyArrayObject *gp_params = NULL;
+    static char *kwlist[] = {"gp_params", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &gp_params))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -932,7 +932,7 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
     {
         case FP64:
         {
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
 
             double *loss = (double*) self->_loss;
             double *grad = (double*) self->_grad;
@@ -941,14 +941,14 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
             {
                 self->_norun = 0;
                 for (int i = 0; i < self->_num_classes * 3; i++) 
-                    param[i] = pyparams_pt[i];
+                    param[i] = gp_params_pt[i];
             }
             else
             {
                 int equal = 1;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    if (param[i] != pyparams_pt[i])
+                    if (param[i] != gp_params_pt[i])
                     {
                         equal = 0;
                         break;
@@ -963,7 +963,7 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
                 else
                 {
                     for (int i = 0; i < self->_num_classes * 3; i++) 
-                        param[i] = pyparams_pt[i];
+                        param[i] = gp_params_pt[i];
                 }
             }
 
@@ -989,7 +989,7 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
         }
         case FP32:
         {
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
 
             float *loss = (float*)self->_loss;
             float *grad = (float*)self->_grad;
@@ -999,14 +999,14 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
             {
                 self->_norun = 0;
                 for (int i = 0; i < self->_num_classes * 3; i++)
-                    param[i] = pyparams_pt[i];
+                    param[i] = gp_params_pt[i];
             }
             else
             {
                 int equal = 1;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    if (param[i] != pyparams_pt[i])
+                    if (param[i] != gp_params_pt[i])
                     {
                         equal = 0;
                         break;
@@ -1021,7 +1021,7 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
                 else
                 {
                     for (int i = 0; i < self->_num_classes * 3; i++)
-                        param[i] = pyparams_pt[i];
+                        param[i] = gp_params_pt[i];
                 }
             }
 
@@ -1058,10 +1058,10 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
 static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, PyObject *kwds)
 {
     // Parse parameters
-    PyArrayObject *pyparams = NULL;
-    PyArrayObject *pyparams_out = NULL;
-    static char *kwlist[] = {"pyparams", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &pyparams))
+    PyArrayObject *gp_params = NULL;
+    PyArrayObject *gp_params_out = NULL;
+    static char *kwlist[] = {"gp_params", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|", kwlist, &PyArray_Type, &gp_params))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -1074,10 +1074,10 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
         case FP64:
         {
             npy_intp dim[] = {self->_num_classes * 3};
-            pyparams_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
+            gp_params_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
 
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
-            double *pyparams_out_pt = (double *) PyArray_DATA(pyparams_out);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
+            double *gp_params_out_pt = (double *) PyArray_DATA(gp_params_out);
 
             double *loss = (double*) self->_loss;
             double *grad = (double*) self->_grad;
@@ -1087,7 +1087,7 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                 self->_norun = 0;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    param[i] = pyparams_pt[i];
+                    param[i] = gp_params_pt[i];
                 }
             }
             else
@@ -1095,7 +1095,7 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                 int equal = 1;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    if (param[i] != pyparams_pt[i])
+                    if (param[i] != gp_params_pt[i])
                     {
                         equal = 0;
                         break;
@@ -1107,16 +1107,16 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                     PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble(loss[0]));
                     for (int i = 0; i < self->_num_classes * 3; i++)
                     {
-                        pyparams_out_pt[i] = grad[i];
+                        gp_params_out_pt[i] = grad[i];
                     }
-                    PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+                    PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
                     return result_tuple;
                 }
                 else
                 {
                     for (int i = 0; i < self->_num_classes * 3; i++)
                     {
-                        param[i] = pyparams_pt[i];
+                        param[i] = gp_params_pt[i];
                     }
                 }
             }
@@ -1139,19 +1139,19 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
             PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble(loss[0]));
             for (int i = 0; i < self->_num_classes * 3; i++)
             {
-                pyparams_out_pt[i] = grad[i];
+                gp_params_out_pt[i] = grad[i];
             }
-            PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+            PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
 
             break;
         }
         case FP32:
         {
             npy_intp dim[] = {self->_num_classes * 3};
-            pyparams_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
+            gp_params_out = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
 
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
-            float *pyparams_out_pt = (float *) PyArray_DATA(pyparams_out);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
+            float *gp_params_out_pt = (float *) PyArray_DATA(gp_params_out);
 
             float *loss = (float*)self->_loss;
             float *grad = (float*)self->_grad;
@@ -1162,7 +1162,7 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                 self->_norun = 0;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    param[i] = pyparams_pt[i];
+                    param[i] = gp_params_pt[i];
                 }
             }
             else
@@ -1170,7 +1170,7 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                 int equal = 1;
                 for (int i = 0; i < self->_num_classes * 3; i++)
                 {
-                    if (param[i] != pyparams_pt[i])
+                    if (param[i] != gp_params_pt[i])
                     {
                         equal = 0;
                         break;
@@ -1182,16 +1182,16 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
                     PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble((double)loss[0]));
                     for (int i = 0; i < self->_num_classes * 3; i++)
                     {
-                        pyparams_out_pt[i] = grad[i];
+                        gp_params_out_pt[i] = grad[i];
                     }
-                    PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+                    PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
                     return result_tuple;
                 }
                 else
                 {
                     for (int i = 0; i < self->_num_classes * 3; i++)
                     {
-                        param[i] = pyparams_pt[i];
+                        param[i] = gp_params_pt[i];
                     }
                 }
             }
@@ -1214,9 +1214,9 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
             PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble((double)loss[0]));
             for (int i = 0; i < self->_num_classes * 3; i++)
             {
-                pyparams_out_pt[i] = grad[i];
+                gp_params_out_pt[i] = grad[i];
             }
-            PyTuple_SetItem(result_tuple, 1, (PyObject*)pyparams_out);
+            PyTuple_SetItem(result_tuple, 1, (PyObject*)gp_params_out);
 
             break;
         }
@@ -1780,7 +1780,7 @@ static PyObject* gpr_problem_setup(PyObject* self, PyObject* args, PyObject *kwd
     // Parse parameters
     static char *kwlist[] = {
         "data", "label", "kernel_type", "nthreads", "exact_gp",
-        "mvtype", "rank", "lfil", "niter", "nvec", "seed", NULL
+        "mvtype", "afn_rank", "afn_lfil", "niter", "nvec", "seed", NULL
     };
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!i|iiiiiiii", kwlist,
         &PyArray_Type, &data, &PyArray_Type, &label, &kernel_type, &nthreads, &exact_gp, 
@@ -2007,7 +2007,7 @@ static PyObject* gpc_problem_setup(PyObject* self, PyObject* args, PyObject *kwd
     // Parse parameters
     static char *kwlist[] = {
         "data", "label", "kernel_type", "nthreads", "exact_gp",
-        "mvtype", "rank", "lfil", "niter", "nvec", "seed", NULL
+        "mvtype", "afn_rank", "afn_lfil", "niter", "nvec", "seed", NULL
     };
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!i|iiiiiiii", kwlist,
         &PyArray_Type, &data, &PyArray_Type, &label, &kernel_type, &nthreads, &exact_gp, 
@@ -2281,7 +2281,7 @@ PyMODINIT_FUNC PyInit_higp_cext(void)
 
 static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObject *kwds)
 {
-    PyArrayObject *pyparams = NULL;
+    PyArrayObject *gp_params = NULL;
     PyArrayObject *data_train = NULL;
     PyArrayObject *label_train = NULL;
     PyArrayObject *data_prediction = NULL;
@@ -2301,12 +2301,12 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
     
     // Parse parameters
     static char *kwlist[] = {
-        "data_train", "label_train", "data_prediction", "kernel_type", "pyparams",
-        "nthreads", "exact_gp", "mvtype", "rank", "lfil", "niter", "tol", NULL
+        "data_train", "label_train", "data_prediction", "kernel_type", "gp_params",
+        "nthreads", "exact_gp", "mvtype", "afn_rank", "afn_lfil", "niter", "tol", NULL
     };
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiid", kwlist,
         &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, 
-        &pyparams, &nthreads, &exact_gp, &mvtype, &rank, &lfil, &niter, &tol))
+        &gp_params, &nthreads, &exact_gp, &mvtype, &rank, &lfil, &niter, &tol))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -2389,14 +2389,14 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
         case FP64:
         {
             int val_type = VAL_TYPE_DOUBLE;
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
             double *X_train = (double *) PyArray_DATA(data_train);
             double *Y_train = (double *) PyArray_DATA(label_train);
             double *X_pred = (double *) PyArray_DATA(data_prediction);
             double *Y_pred = (double *) PyArray_DATA(label_prediction);
             double *Y_stddev = (double *) PyArray_DATA(stddev);
 
-            double param[4] = {(double) dim, pyparams_pt[0], pyparams_pt[1], pyparams_pt[2]};
+            double param[4] = {(double) dim, gp_params_pt[0], gp_params_pt[1], gp_params_pt[2]};
 
             if (exact_gp)
             {
@@ -2423,13 +2423,13 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
         case FP32:
         {
             int val_type = VAL_TYPE_FLOAT;
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
             float *X_train = (float *) PyArray_DATA(data_train);
             float *Y_train = (float *) PyArray_DATA(label_train);
             float *X_pred = (float *) PyArray_DATA(data_prediction);
             float *Y_pred = (float *) PyArray_DATA(label_prediction);
             float *Y_stddev = (float *) PyArray_DATA(stddev);
-            float param[4] = {(float) dim, pyparams_pt[0], pyparams_pt[1], pyparams_pt[2]};
+            float param[4] = {(float) dim, gp_params_pt[0], gp_params_pt[1], gp_params_pt[2]};
             float tol_f = tol > 1e-5 ? tol : 1e-5;
 
             if (exact_gp)
@@ -2467,7 +2467,7 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
 
 static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObject *kwds)
 {
-    PyArrayObject *pyparams = NULL;
+    PyArrayObject *gp_params = NULL;
     PyArrayObject *data_train = NULL;
     PyArrayObject *label_train = NULL;
     PyArrayObject *data_prediction = NULL;
@@ -2489,11 +2489,11 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
 
     // Parse parameters
     static char *kwlist[] = {
-        "data_train", "label_train", "data_prediction", "kernel_type", "pyparams", 
-        "nthreads", "exact_gp", "mvtype", "nsample", "rank", "lfil", "niter", "tol", NULL
+        "data_train", "label_train", "data_prediction", "kernel_type", "gp_params", 
+        "nthreads", "exact_gp", "mvtype", "nsample", "afn_rank", "afn_lfil", "niter", "tol", NULL
     };
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiiid", kwlist,
-        &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, &pyparams,
+        &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, &gp_params,
         &nthreads, &exact_gp, &mvtype, &nsample, &rank, &lfil, &niter, &tol))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
@@ -2598,7 +2598,7 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
         case FP64:
         {
             int val_type = VAL_TYPE_DOUBLE;
-            double *pyparams_pt = (double *) PyArray_DATA(pyparams);
+            double *gp_params_pt = (double *) PyArray_DATA(gp_params);
             double *X_train = (double *) PyArray_DATA(data_train);
             double *X_pred = (double *) PyArray_DATA(data_prediction);
             int *Y_pred = (int *) PyArray_DATA(label_prediction);
@@ -2607,7 +2607,7 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
 
             double *param = (double *) malloc(3 * num_classes * sizeof(double));
             for (int i = 0; i < 3 * num_classes; i++)
-                param[i] = pyparams_pt[i];
+                param[i] = gp_params_pt[i];
 
             if (exact_gp)
             {
@@ -2635,7 +2635,7 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
         case FP32:
         {
             int val_type = VAL_TYPE_FLOAT;
-            float *pyparams_pt = (float *) PyArray_DATA(pyparams);
+            float *gp_params_pt = (float *) PyArray_DATA(gp_params);
             float *X_train = (float *) PyArray_DATA(data_train);
             float *X_pred = (float *) PyArray_DATA(data_prediction);
             int *Y_pred = (int *) PyArray_DATA(label_prediction);
@@ -2644,7 +2644,7 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
             
             float *param = (float *) malloc(3 * num_classes * sizeof(float));
             for (int i = 0; i < 3 * num_classes; i++)
-                param[i] = pyparams_pt[i];
+                param[i] = gp_params_pt[i];
 
             float tol_f = 1e-5;
 

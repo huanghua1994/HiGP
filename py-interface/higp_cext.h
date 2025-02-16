@@ -326,7 +326,7 @@ static PyObject* GPRProblemObject_loss(GPRProblemObject* self, PyObject* args, P
 static char HiGP_Cext_gpr_loss_help[] = 
     "GP Regression loss function.\n"
     "Input:\n"
-    "    pyparams: The parameters (l, f, s) of the GP model (NumPy array, length 3, before transformation).\n"
+    "    gp_params: The parameters (l, f, s) of the GP model (NumPy array, length 3, before transformation).\n"
     "Output:\n"
     "    loss: The loss.\n";
 
@@ -339,7 +339,7 @@ static PyObject* GPRProblemObject_grad(GPRProblemObject* self, PyObject* args, P
 static char HiGP_Cext_gpr_grad_help[] = 
     "GP regression loss function with gradient.\n"
     "Input:\n"
-    "    pyparams: The parameters (l, f, s) of the GP model (NumPy array, length 3, before transformation).\n"
+    "    gp_params: The parameters (l, f, s) of the GP model (NumPy array, length 3, before transformation).\n"
     "Output:\n"
     "    results: Tuple of length 2."
     "        results[0] : The loss.\n"
@@ -389,15 +389,15 @@ static int gpr_problem_init(GPRProblemObject* self, PyObject* args, PyObject* kw
 static char HiGP_Cext_gpr_problem_setup_help[] = 
     "GP regression problem struct creation function.\n"
     "Inputs:\n"
-    "    data           : Dataset point coordinate (row-major NumPy array, size dim-by-N).\n"
-    "    label          : The training label (NumPy array, length N).\n"
-    "    kernel_type    : 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom.\n"
+    "    data             : Dataset point coordinate (row-major NumPy array, size dim-by-N).\n"
+    "    label            : The training label (NumPy array, length N).\n"
+    "    kernel_type      : 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom.\n"
     "Optional inputs (default value): \n"
     "    nthreads (-1)  : Max number of OpenMP threads, -1 for system default number of threads.\n"
     "    exact_gp (0)   : 0: use iterative methods; 1: use exact solve.\n"
     "    mvtype (0)     : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).\n"
-    "    rank (50)      : The rank of the AFN preconditioner.\n"
-    "    lfil (0)       : The fill-level of the Schur complement of the AFN preconditioner.\n"
+    "    afn_rank (50)  : The rank of the AFN preconditioner for Lanczos quadrature.\n"
+    "    afn_lfil (0)   : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature.\n"
     "    niter (10)     : The number of iterations for the Lanczos Quadrature.\n"
     "    nvec (10)      : The number of test vectors for the Lanczos Quadrature.\n"
     "    seed (-1)      : Random number generator seed, -1 for system default number.\n"
@@ -494,7 +494,7 @@ static PyObject* GPCProblemObject_loss(GPCProblemObject* self, PyObject* args, P
 static char HiGP_Cext_gpc_loss_help[] = 
     "GP classification loss function.\n"
     "Input:\n"
-    "    pyparams: The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
+    "    gp_params: The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
     "Output:\n"
     "    loss: The loss.\n";
 
@@ -507,7 +507,7 @@ static PyObject* GPCProblemObject_grad(GPCProblemObject* self, PyObject* args, P
 static char HiGP_Cext_gpc_grad_help[] = 
     "GP classification loss function with gradients.\n"
     "Input:\n"
-    "    pyparams: The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
+    "    gp_params: The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
     "Output:\n"
     "    results: Tuple of length 2."
     "        results[0] : The loss.\n"
@@ -564,8 +564,8 @@ static char HiGP_Cext_gpc_problem_setup_help[] =
     "    nthreads (-1)  : Max number of OpenMP threads, -1 for system default number of threads.\n"
     "    exact_gp (0)   : 0: use iterative methods; 1: use exact solve.\n"
     "    mvtype (0)     : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).\n"
-    "    rank (50)      : The rank of the AFN preconditioner.\n"
-    "    lfil (0)       : The fill-level of the Schur complement of the AFN preconditioner.\n"
+    "    afn_rank (50)  : The rank of the AFN preconditioner.\n"
+    "    afn_lfil (0)   : The fill-level of the Schur complement of the AFN preconditioner.\n"
     "    niter (10)     : The number of iterations for the Lanczos Quadrature.\n"
     "    nvec (10)      : The number of test vectors for the Lanczos Quadrature.\n"
     "    seed (-1)      : Random number generator seed, -1 for system default number.\n"
@@ -635,23 +635,23 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
 static char HiGP_Cext_gpr_prediction_help[] = 
     "GP regression prediction function.\n"
     "Inputs:\n"
-    "    data_train         : The training data (row-major NumPy array, size d-by-N).\n"
-    "    label_train        : The training label (NumPy array, length N).\n"
-    "    data_prediction    : The data used in prediction (NumPy array, size d-by-N).\n"
+    "    data_train         : Training data, row-major NumPy matrix, size d-by-N1.\n"
+    "    label_train        : Training label, NumPy array, length N1.\n"
+    "    data_prediction    : Prediction data, NumPy matrix, size d-by-N2.\n"
     "    kernel_type        : 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom.\n"
-    "    pyparams           : The parameters (l, f, s) of the GP model (NumPy array, length 3, before transformation).\n"
+    "    gp_params          : GP model parameters (l, f, s), NumPy array, length 3, before transformation.\n"
     "Optional inputs (default value): \n"
     "    nthreads (-1)  : Max number of OpenMP threads, -1 for system default number of threads.\n"
     "    exact_gp (0)   : 0: use iterative methods; 1: use exact solve.\n"
     "    mvtype (0)     : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).\n"
-    "    rank (50)      : The rank of the AFN preconditioner.\n"
-    "    lfil (0)       : The fill-level of the Schur complement of the AFN preconditioner.\n"
+    "    afn_rank (50)  : The rank of the AFN preconditioner.\n"
+    "    afn_lfil (0)   : The fill-level of the Schur complement of the AFN preconditioner.\n"
     "    niter (50)     : The number of iterations for PCG in the precondition.\n"
     "    tol (1e-6)     : The tolerance for PCG in the precondition.\n"
     "Output:\n"
     "    prediction: tuple with two elements.\n"
-    "        prediction[0] : The predicted label (NumPy array, length N).\n"
-    "        prediction[1] : The standard deviation of the predicted label (NumPy array, length N).\n";
+    "        prediction[0] : Prediction mean value (NumPy array, length N).\n"
+    "        prediction[1] : Prediction standard deviation (NumPy array, length N).\n";
 
 // Compute prediction
 static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObject *kwds);
@@ -663,21 +663,21 @@ static char HiGP_Cext_gpc_prediction_help[] =
     "    label_train        : The training label (NumPy array, length N).\n"
     "    data_prediction    : The data used in prediction (NumPy array, size d-by-N).\n"
     "    kernel_type        : 1: Gaussian; 2: Matern 3/2; 3: Matern 5/2; 99: custom.\n"
-    "    pyparams           : The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
+    "    gp_params          : The parameters [l1, f1, s1, l2, f2, s2, ...] of the GP model (NumPy array, length 3 * num_classes, before transformation).\n"
     "Optional inputs (default value): \n"
     "    nthreads (-1)  : Max number of OpenMP threads, -1 for system default number of threads.\n"
     "    exact_gp (0)   : 0: use iterative methods; 1: use exact solve.\n"
     "    mvtype (0)     : Matvec type: 0: Use H2 when possible, otherwise falls back to OTF or AOT; 1: AOT (ahead-of-time); 2: OTF (on-the-fly).\n"
     "    nsamples (256) : Number of sample vectors for predicting probability.\n"
-    "    rank (50)      : The rank of the AFN preconditioner.\n"
-    "    lfil (0)       : The fill-level of the Schur complement of the AFN preconditioner.\n"
+    "    afn_rank (50)  : The rank of the AFN preconditioner.\n"
+    "    afn_lfil (0)   : The fill-level of the Schur complement of the AFN preconditioner.\n"
     "    niter (50)     : The number of iterations for PCG in the precondition.\n"
     "    tol (1e-6)     : The tolerance for PCG in the precondition.\n"
     "Output:\n"
     "   prediction: tuple with three elements.\n"
-    "       prediction[0] : The predicted label (NumPy array, length N).\n"
-    "       prediction[1] : The predicted value (row-major NumPy array, size num_classes-by-N).\n"
-    "       prediction[2] : The predicted probability (row-major NumPy array, size num_classes-by-N).\n";
+    "       prediction[0] : Prediction label (NumPy array, length N).\n"
+    "       prediction[1] : Prediction mean value  (row-major NumPy array, size num_classes-by-N).\n"
+    "       prediction[2] : Prediction probability (row-major NumPy array, size num_classes-by-N).\n";
 
 /*
  * @brief       Function for the global HiGP.
