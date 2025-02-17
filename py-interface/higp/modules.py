@@ -39,7 +39,7 @@ def gpc_prediction(*args, **kwargs):
     results = SimpleNamespace()
     results.prediction_label = pred[0]
     results.prediction_mean = pred[1]
-    results.prediction_stddev = pred[2]
+    results.prediction_probability = pred[2]
     return results
 
 def gpr_scipy_minimize(gprproblem,
@@ -372,7 +372,7 @@ def ezgpr_torch(train_x,
             pred.prediction_stddev : NumPy array, size N2, prediction standard deviation
     """
 
-    if(seed >= 0):
+    if (seed >= 0):
         np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
@@ -424,9 +424,9 @@ def ezgpr_torch(train_x,
     gprproblem = higp_cext.gprproblem.setup(data=train_x,
                                             label=train_y,
                                             kernel_type=kernel_type,
+                                            nthreads=n_threads,
                                             exact_gp=exact_gp,
                                             mvtype=mvtype,
-                                            nthreads=n_threads,
                                             afn_rank=afn_rank_lq,
                                             afn_lfil=afn_lfil_lq,
                                             niter=niter_lq,
@@ -445,10 +445,10 @@ def ezgpr_torch(train_x,
                           label_train=train_y,
                           data_prediction=test_x,
                           kernel_type=kernel_type,
-                          exact_gp=exact_gp,
-                          mvtype=mvtype,
                           gp_params=model.get_params(),
                           nthreads=n_threads,
+                          exact_gp=exact_gp,
+                          mvtype=mvtype,
                           afn_rank=afn_rank_pred,
                           afn_lfil=afn_lfil_pred,
                           niter=niter_pred,
@@ -459,5 +459,162 @@ def ezgpr_torch(train_x,
     if test_y is not None:
         rmse = np.linalg.norm(pred.prediction_mean - test_y) / np.sqrt(float(N2))
         print("RMSE: %g\n" % (rmse))
+
+    return pred
+
+def ezgpc_torch(train_x,
+                train_y,
+                test_x,
+                test_y,
+                l_init = 0.0,
+                f_init = 0.0,
+                s_init = 0.0,
+                n_threads = -1,
+                exact_gp = 0,
+                kernel_type = 1,
+                mvtype = 0,
+                afn_rank_lq = 50,
+                afn_lfil_lq = 0,
+                afn_rank_pred = 50,
+                afn_lfil_pred = 0,
+                niter_lq = 10,
+                nvec_lq = 10,
+                niter_pred = 500,
+                tol_pred = 1e-05,
+                dtype_torch = torch.float32,
+                seed = 42,
+                adam_lr = 0.01,
+                adam_maxits = 100,
+                print_info = True):
+
+    """
+    Easy to use GP classification interface with PyTorch using Adam optimizer
+    Inputs:
+        train_x : PyTorch tensor / row-major NumPy array, training data of size d-by-N1 (or array of size N1 if d = 1)
+        train_y : PyTorch tensor / row-major NumPy array, training labels of size N1
+        test_x  : PyTorch tensor / row-major NumPy array, testing data of size d-by-N2 (or array of size N2 if d = 1)
+    Optional Inputs (default values):
+        test_y (None)                     : PyTorch tensor / row-major NumPy array, testing labels of size `N2`, only used for correctness calculation
+        l_init (0.0)                      : Initial value of l (before transformation)
+        f_init (0.0)                      : Initial value of f (before transformation)
+        s_init (0.0)                      : Initial value of s (before transformation)
+        n_threads (-1)                    : Number of threads. If negative will use the system's default
+        exact_gp (0)                      : Whether to use exact matrix solve in GP computation
+        kernel_type (higp.GaussianKernel) : Kernel type, can be higp.GaussianKernel, higp.Matern32Kernel, higp.Matern52Kernel, or higp.CustomKernel.
+        mvtype (higp.MatvecAuto)          : Matvec type: can be higp.MatvecAuto, higp.MatvecAOT, or higp.MatvecOTF
+        afn_rank_lq (50)                  : The rank of the AFN preconditioner for Lanczos quadrature
+        afn_lfil_lq (0)                   : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
+        afn_rank_pred (50)                : The rank of the AFN preconditioner forprediction
+        afn_lfil_pred (0)                 : The fill-level of the Schur complement of the AFN preconditioner for prediction
+        niter_lq (10)                     : Number of iterations for the Lanczos quadrature
+        nvec_lq (10)                      : Number of vectors for the Lanczos quadrature
+        niter_pred (500)                  : Number of the PCG solver iterations for the prediction
+        tol_pred (1e-5)                   : Prediction PCG solver tolerance
+        seed (42)                         : Random seed. If negative will not set seed.
+        adam_lr (0.1)                     : Adam optimizer learning rate
+        adam_maxits (100)                 : Max number of iterations for the Adam optimizer
+        dtype_torch (torch.float32)       : PyTorch datatype
+        print_info (True)                 : Print iteration and hyperparameters or not
+    Outputs:
+        pred : structure, containing two members
+            pred.prediction_label       : NumPy array, size N2, prediction mean values
+            pred.prediction_mean        : NumPy matrix, size d-by-N2, prediction mean values
+            pred.prediction_probability : NumPy matrix, size d-by-N2, prediction probability
+    """
+
+    if (seed >= 0):
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    dtype = np.float32 if dtype_torch == torch.float32 else np.float64
+
+    if isinstance(train_x, torch.Tensor):
+        train_x = np.ascontiguousarray(train_x.numpy().astype(dtype))
+    elif isinstance(train_x, np.ndarray):
+        train_x = np.ascontiguousarray(train_x.astype(dtype))
+    else:
+        raise ValueError("Input training data format is not supported")
+    if train_x.ndim == 1:
+        train_x = train_x[np.newaxis, :]
+    
+    if isinstance(train_y, torch.Tensor):
+        train_y = np.ascontiguousarray(train_y.numpy().astype(int))
+    elif isinstance(train_y, np.ndarray):
+        train_y = np.ascontiguousarray(train_y.astype(int))
+    else:
+        raise ValueError("Input training label format is not supported")
+    if train_y.ndim == 2:
+        train_y = train_y.squeeze()
+
+    label_min = np.min(train_y)
+    label_max = np.max(train_y)
+    num_classes = label_max - label_min + 1
+    train_y = train_y - label_min
+
+    if isinstance(test_x, torch.Tensor):
+        test_x = np.ascontiguousarray(test_x.numpy().astype(dtype))
+    elif isinstance(test_x, np.ndarray):
+        test_x = np.ascontiguousarray(test_x.astype(dtype))
+    else:
+        raise ValueError("Input testing data format is not supported")
+    if test_x.ndim == 1:
+        test_x = test_x[np.newaxis, :]
+
+    if isinstance(test_y, torch.Tensor):
+        test_y = np.ascontiguousarray(test_y.numpy().astype(int))
+    elif isinstance(test_y, np.ndarray):
+        test_y = np.ascontiguousarray(test_y.astype(int))    
+    else:
+        raise ValueError("Input testing label format is not supported")
+    if test_y.ndim == 2:
+        test_y = test_y.squeeze()
+
+    print("Read %d training / %d test data points" % (train_x.shape[1], test_x.shape[1]))
+    print("Data dimension: %d" % train_x.shape[0])
+
+    N1 = train_x.shape[1]
+    N2 = test_x.shape[1]
+
+    gpcproblem = higp_cext.gpcproblem.setup(data=train_x,
+                                            label=train_y,
+                                            kernel_type=kernel_type,
+                                            nthreads=n_threads,
+                                            exact_gp=exact_gp,
+                                            mvtype=mvtype,
+                                            afn_rank=afn_rank_lq,
+                                            afn_lfil=afn_lfil_lq,
+                                            niter=niter_lq,
+                                            nvec=nvec_lq)
+
+    model = GPCModel(gpcproblem, num_classes, l=l_init, f=f_init, s=s_init, dtype=dtype_torch)
+    optimizer = torch.optim.Adam(model.parameters(), lr=adam_lr)
+
+    t0 = time.time()
+    gpc_torch_minimize(model, optimizer, maxits=adam_maxits, scale=1.0/N1, print_info=print_info)
+    t1 = time.time()
+    print("Training time: %g" % (t1-t0))
+
+    t0 = time.time()
+    pred = gpc_prediction(data_train=train_x,
+                          label_train=train_y,
+                          data_prediction=test_x,
+                          kernel_type=kernel_type,
+                          gp_params=model.get_params(),
+                          nthreads=n_threads,
+                          exact_gp=exact_gp,
+                          mvtype=mvtype,
+                          afn_rank=afn_rank_pred,
+                          afn_lfil=afn_lfil_pred,
+                          niter=niter_pred,
+                          tol=tol_pred)
+    t1 = time.time()
+    print("Prediction time: %g" % (t1-t0))
+
+    if test_y is not None:
+        diff_count = np.sum(pred.prediction_label != test_y)
+        correct_count = test_y.size - diff_count
+        accuracy = correct_count / test_y.size
+        print(f"Prediction accuracy: {accuracy}\n")
 
     return pred

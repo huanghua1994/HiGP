@@ -2360,34 +2360,14 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
     else npt_s = -rank;               // Mute rank estimation and use Nystrom
     if (ret == 0) return NULL;
     
-    // Determine the return type
+    npy_intp out_dim[] = {n2};
     switch (dtype)
     {
         case FP64:
         {
-            npy_intp dim[] = {n2};
-            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
-            stddev           = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT64);
-            break;
-        }
-        case FP32:
-        {
-            npy_intp dim[] = {n2};
-            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
-            stddev           = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_FLOAT32);
-            break;
-        }
-        default:
-        {
-            PyErr_SetString(PyExc_ValueError, "Unknown data type!");
-            return NULL;
-        }
-    }
+            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_FLOAT64);
+            stddev           = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_FLOAT64);
 
-    switch (dtype)
-    {
-        case FP64:
-        {
             int val_type = VAL_TYPE_DOUBLE;
             double *gp_params_pt = (double *) PyArray_DATA(gp_params);
             double *X_train = (double *) PyArray_DATA(data_train);
@@ -2422,6 +2402,9 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
         }
         case FP32:
         {
+            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_FLOAT32);
+            stddev           = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_FLOAT32);
+
             int val_type = VAL_TYPE_FLOAT;
             float *gp_params_pt = (float *) PyArray_DATA(gp_params);
             float *X_train = (float *) PyArray_DATA(data_train);
@@ -2566,37 +2549,16 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
     else npt_s = -rank;               // Mute rank estimation and use Nystrom
     if (ret == 0) return NULL;
 
-    // Determine the return type
+    npy_intp out_dim[] = {n2};
+    npy_intp out_dim2[] = {num_classes, n2};
     switch (dtype)
     {
         case FP64:
         {
-            npy_intp dim[] = {n2};
-            npy_intp dim2[] = {num_classes, n2};
-            label_prediction    = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_INT32);
-            label_value         = (PyArrayObject *) PyArray_SimpleNew(2, dim2, NPY_FLOAT64);
-            label_prob          = (PyArrayObject *) PyArray_SimpleNew(2, dim2, NPY_FLOAT64);
-            break;
-        }
-        case FP32:
-        {
-            npy_intp dim[] = {n2};
-            label_prediction    = (PyArrayObject *) PyArray_SimpleNew(1, dim, NPY_INT32);
-            label_value         = (PyArrayObject *) PyArray_SimpleNew(2, dim, NPY_FLOAT32);
-            label_prob          = (PyArrayObject *) PyArray_SimpleNew(2, dim, NPY_FLOAT32);
-            break;
-        }
-        default:
-        {
-            PyErr_SetString(PyExc_ValueError, "Unknown data type!");
-            return NULL;
-        }
-    }
+            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_INT32);
+            label_value      = (PyArrayObject *) PyArray_SimpleNew(2, out_dim2, NPY_FLOAT64);
+            label_prob       = (PyArrayObject *) PyArray_SimpleNew(2, out_dim2, NPY_FLOAT64);
 
-    switch (dtype)
-    {
-        case FP64:
-        {
             int val_type = VAL_TYPE_DOUBLE;
             double *gp_params_pt = (double *) PyArray_DATA(gp_params);
             double *X_train = (double *) PyArray_DATA(data_train);
@@ -2634,6 +2596,10 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
         }
         case FP32:
         {
+            label_prediction = (PyArrayObject *) PyArray_SimpleNew(1, out_dim, NPY_INT32);
+            label_value      = (PyArrayObject *) PyArray_SimpleNew(2, out_dim2, NPY_FLOAT32);
+            label_prob       = (PyArrayObject *) PyArray_SimpleNew(2, out_dim2, NPY_FLOAT32);
+
             int val_type = VAL_TYPE_FLOAT;
             float *gp_params_pt = (float *) PyArray_DATA(gp_params);
             float *X_train = (float *) PyArray_DATA(data_train);

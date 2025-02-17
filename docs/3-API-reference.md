@@ -186,9 +186,9 @@ Make GP classification prediction with a given set of hyperparameters.
   * `tol (1e-6)`                : The tolerance for PCG in the precondition
 * Output:
   * `pred` : structure, containing three members
-    * `pred.prediction_label`   : NumPy array, size `N2`, prediction labels
-    * `pred.prediction_mean`    : NumPy matrix, size `d`-by-`N2`, prediction mean values
-    * `pred.prediction_stddev`  : NumPy matrix, size `d`-by-`N2`, prediction probability
+    * `pred.prediction_label`       : NumPy array, size `N2`, prediction labels
+    * `pred.prediction_mean`        : NumPy matrix, size `d`-by-`N2`, prediction mean values
+    * `pred.prediction_probability` : NumPy matrix, size `d`-by-`N2`, prediction probability
 
 ## 3.10 Method `ezgpr_torch()`
 
@@ -224,3 +224,39 @@ Easy to use GP regression interface with PyTorch using Adam optimizer.
   * `pred` : structure, containing two members
     * `pred.prediction_mean`   : NumPy array, size `N2`, prediction mean values
     * `pred.prediction_stddev` : NumPy array, size `N2`, prediction standard deviation
+
+## 3.11 Method `ezgpc_torch()`
+
+Easy to use GP classification interface with PyTorch using Adam optimizer.
+
+* Inputs:
+  * `train_x` : PyTorch tensor / row-major NumPy matrix, training data of size `d`-by-`N1` (or array of size `N1` if `d = 1`)
+  * `train_y` : PyTorch tensor / row-major NumPy array, training labels of size `N1`
+  * `test_x`  : PyTorch tensor / row-major NumPy matrix, testing data of size `d`-by-`N2` (or array of size `N2` if `d = 1`)
+* Optional Inputs (default value):
+  * `test_y (None)`                     : PyTorch tensor / row-major NumPy array, testing labels of size `N2`, only used for correctness calculation
+  * `l_init (0.0)`                      : Initial value of `l` (before transformation)
+  * `f_init (0.0)`                      : Initial value of `f` (before transformation)
+  * `s_init (0.0)`                      : Initial value of `s` (before transformation)
+  * `n_threads (-1)`                    : Number of threads. If negative will use the system's default
+  * `exact_gp (0)`                      : Whether to use exact matrix solve in GP computation
+  * `kernel_type (higp.GaussianKernel)` : Kernel type, can be `higp.GaussianKernel`, `higp.Matern32Kernel`, `higp.Matern52Kernel`, or `higp.CustomKernel`
+  * `mvtype (higp.MatvecAuto)`          : Matvec type: can be `higp.MatvecAuto`, `higp.MatvecAOT`, or `higp.MatvecOTF`
+  * `afn_rank_lq (50)`                  : The rank of the AFN preconditioner for Lanczos quadrature
+  * `afn_lfil_lq (0)`                   : The fill-level of the Schur complement of the AFN preconditioner for Lanczos quadrature
+  * `afn_rank_pred (50)`                : The rank of the AFN preconditioner for prediction
+  * `afn_lfil_pred (0)`                 : The fill-level of the Schur complement of the AFN preconditioner for prediction
+  * `niter_lq (10)`                     : Number of iterations for the Lanczos quadrature
+  * `nvec_lq (10)`                      : Number of vectors for the Lanczos quadrature
+  * `niter_pred (500)`                  : Number of the PCG solver iterations for the prediction
+  * `tol_pred (1e-5)`                   : Prediction PCG solver tolerance
+  * `seed (42)`                         : Random number generator seed
+  * `adam_lr (0.1)`                     : Adam optimizer learning rate
+  * `adam_maxits (100)`                 : Max number of iterations for the Adam optimizer
+  * `dtype_torch (torch.float32)`       : PyTorch datatype
+  * `print_info (True)`                 : Print iteration and hyperparameters or not
+* Outputs:
+  * `pred` : structure, containing three members
+    * `pred.prediction_label`       : NumPy array, size `N2`, prediction labels
+    * `pred.prediction_mean`        : NumPy matrix, size `d`-by-`N2`, prediction mean values
+    * `pred.prediction_probability` : NumPy matrix, size `d`-by-`N2`, prediction probability

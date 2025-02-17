@@ -456,7 +456,7 @@ static void precond_gpr_predict(
     const VT *Y_train, const int n_pred, const VT *X_pred, const int ldXp, 
     const int npt_s, const int glr_rank, const int fsai_npt, const int max_iter, 
     const VT *rel_tol, symm_kmat_alg_t K11_alg, VT *Y_pred, VT *stddev, 
-    VT *cov2, VT *dnoise
+    VT *cov2, VT *dnoise, const int enable_warning = 0
 )
 {
     const int is_float  = std::is_same<VT, float>::value;
@@ -544,7 +544,7 @@ static void precond_gpr_predict(
         A_mm, A_ptr, invM_mm, invM_ptr,
         Y_train, n_train, iK11_Y, n_train, iters
     );
-    if (iters[0] == -1)
+    if (iters[0] == -1 && enable_warning)
     {
         WARNING_PRINTF(
             "AFN-PCG failed to converge to reltol %.2e in %d iterations for iK11_Y\n", 
@@ -574,6 +574,7 @@ static void precond_gpr_predict(
     for (int i = 0; i < n_pred; i++)
     {
         if (iters[i] >= 0) continue;
+        if (!enable_warning) continue;
         WARNING_PRINTF(
             "AFN-PCG failed to converge to reltol %.2e in %d iterations for iK11_K12(:, %d)\n", 
             rel_tol[0], max_iter, i+1
