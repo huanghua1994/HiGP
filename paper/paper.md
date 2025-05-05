@@ -34,7 +34,7 @@ bibliography: paper.bib
 
 # Summary
 
-Gaussian Processes (GPs) [@Rasmussen:2005; @Murphy:2022; @Murphy:2023] are flexible, nonparametric Bayesian models widely used for regression and classification tasks due to their ability to capture complex data patterns and provide uncertainty quantification (UQ). Traditional GP implementations often face challenges in scalability and computational efficiency, especially with large datasets. To address these challenges, HiGP, a high-performance Python package, is designed for efficient Gaussian Process regression and classification across datasets of varying sizes. HiGP combines multiple new iterative methods to enhance the performance and efficiency of GP computations. It implements various effective matrix-vector (MatVec) and matrix-matrix (MatMul) multiplication strategies specifically tailored for kernel matrices [@Xing:2019; @Huang:2020; @Cai:2023]. To improve the convergence  of iterative methods, HiGP also integrates the recently developed Adaptive Factorized Nyström (AFN) preconditioner [@Zhao:2024] and employs precise formulas for computing the gradients. HiGP integrates with PyTorch and other Python packages, allowing easy incorporation into existing machine learning and data analysis workflows.
+Gaussian Processes (GPs) [@Rasmussen:2005; @Murphy:2022; @Murphy:2023] are flexible, nonparametric Bayesian models widely used for regression and classification tasks due to their ability to capture complex data patterns and provide uncertainty quantification. Traditional GP implementations often face challenges in scalability for large datasets. To address these challenges, HiGP, a high-performance Python package, is designed for efficient Gaussian Process regression and classification across datasets of varying sizes. HiGP uses  iterative solvers to access large GP computations. It implements matrix-vector (MatVec) and matrix-matrix (MatMul) multiplication algorithms tailored to kernel matrices [@Xing:2019; @Huang:2020; @Cai:2023]. To improve the convergence of iterative methods, HiGP also integrates the recently developed Adaptive Factorized Nyström (AFN) preconditioner [@Zhao:2024]. Further, it directly implements the graidents of the log likelihood function to be optimized. HiGP can be used with PyTorch and other Python packages, allowing easy incorporation into existing machine learning and data analysis workflows.
 
 # Gaussian Processes
 
@@ -55,9 +55,9 @@ f^2
 \end{bmatrix}
 \end{pmatrix}. \tag{1}
 $$
-Here, $f$ and $s$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa(\mathbf{u}, \mathbf{v}): \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ is a kernel function, and $\kappa(\mathbf{X}, \mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa(\mathbf{X}_{i,:}, \mathbf{Y}_{j,:})$, where $\mathbf{X}_{i,:}$ denotes the $i$-th row of the dataset $\mathbf{X}$. Commonly used kernel functions include the Gaussian kernel (also known as the Radial Basis Function or RBF kernel) and Mat\'ern kernels. These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(\mathbf{u}, \mathbf{v}) = \exp(-\|\mathbf{u} - \mathbf{v}\|^2 / (2l^2))$ depends on the parameter $l$, typically known as the length scale.
+Here, $f$ and $s$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa(\mathbf{u}, \mathbf{v}): \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ is a kernel function, and $\kappa(\mathbf{X}, \mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa(\mathbf{X}_{i,:}, \mathbf{Y}_{j,:})$, where $\mathbf{X}_{i,:}$ denotes the $i$-th row of $\mathbf{X}$. Commonly used kernel functions include the Gaussian kernel (also known as the Radial Basis Function kernel) and Mat\'ern kernels. These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(\mathbf{u}, \mathbf{v}) = \exp(-\|\mathbf{u} - \mathbf{v}\|^2 / (2l^2))$ depends on the parameter $l$, typically known as the length scale.
 
-To find the $s$, $f$, and kernel parameters that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood (NLML):
+To find the $s$, $f$, and kernel parameters that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
 $$
 L(\Theta) = \frac{1}{2} \left( \mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1} \mathbf{y} 
 + \log|\widehat{\mathbf{K}}| + n\log 2\pi \right), \tag{2}
@@ -76,47 +76,28 @@ $$
 \text{tr}{ \left( \widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \right)} 
 \approx \frac{1}{k} \sum_{i=1}^{k} \mathbf{z}_{i}^{\top} \widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \mathbf{z}_{i}, \tag{4}
 $$
-where $\mathbf{z}_{i} \sim \mathcal{N}(0,1), i = 1, \cdots, k$ are independent random vectors. To estimate the logarithm of the determinant,
-$$
-\log|\widehat{\mathbf{K}}| = \text{tr} \left( \log \widehat{\mathbf{K}} \right) = \sum_{i=1}^n \log \lambda_i(\widehat{\mathbf{K}}),  \tag{5}
-$$
-where $\lambda_i(\mathbf{A})$ denotes the $i$-th eigenvalue of $\mathbf{A}$, we use stochastic Lanczos quadrature [@Ubaru:2017]. This method needs to sample $k_z$ independent vectors $\mathbf{z}_i \sim \mathcal{N}(0,1), i = 1, \cdots, k_z$ and solve linear systems
+where $\mathbf{z}_{i} \sim \mathcal{N}(0, I), i = 1, \cdots, k$ are independent random vectors. To estimate $\log|\hat{K}|$, we use stochastic Lanczos quadrature [@Ubaru:2017] for $\text{tr}(\log|\hat{K}|)$. This method needs to sample $k_z$ independent vectors $\mathbf{z}_i \sim \mathcal{N}(0,I), i = 1, \cdots, k_z$ and solve linear systems
 $$
 \widehat{\mathbf{K}}\mathbf{u}_i = \mathbf{z}_i,\quad i=1,2,\ldots,k_z. \tag{6}
 $$
-We reuse the PCG method, as shown in Algorithm 1, to estimate the tridiagonal matrix $\mathbf{T}_m$ of its underlying Lanczos algorithm after $m$-steps.
-
-![Algorithm 1: Conjugate Gradient](./Algo1-CG.png)
-
-If we store all the $\alpha \text{s}$ and $\beta \text{s}$ generated from each step of CG, we can form a tridiagonal matrix $\mathbf{T}_m = \operatorname{tridiag}\left(\frac{\sqrt{\beta_{i-1}}}{\alpha_{i-1}}, \frac{1}{\alpha_{i-1}}+\frac{\beta_{i-2}}{\alpha_{i-2}},\frac{\sqrt{\beta_{i-1}}}{\alpha_{i-1}}\right)$ with $\alpha_{-1}=1,\beta_{-1}=0$:
-$$
-\mathbf{T}_m=
-\begin{pmatrix}
-\frac{1}{\alpha_0} & \frac{\sqrt{\beta_0}}{\alpha_0} & & & \\
-\frac{\sqrt{\beta_0}}{\alpha_0} & \frac{1}{\alpha_1}+\frac{\beta_0}{\alpha_0} & \frac{\sqrt{\beta_1}}{\alpha_1} & & \\
- & \ddots & \ddots & \ddots & \\
- & &\frac{\sqrt{\beta_{m-3}}}{\alpha_{m-3}} & \frac{1}{\alpha_{m-2}}+\frac{\beta_{m-3}}{\alpha_{m-3}}& \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} \\
- & & & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} & \frac{1}{\alpha_{m-1}}+\frac{\beta_{m-2}}{\alpha_{m-2}} \\
-\end{pmatrix}, \tag{7}
-$$
-which can be used to estimate the logarithmic determinant term as 
+Let $T_{z_i}$ denote the tridiagonal matrix in the Lanczos method. Then,
 $$
 \log|\widehat{\mathbf{K}}| = \text{tr} \left( \log \widehat{\mathbf{K}} \right) 
-\approx {k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}, \tag{8}
+\approx \frac{1}{k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}_{1}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}_{1},
 $$
-where $\mathbf{T}_{\mathbf{z}_i}$ is the tridiagonal matrix obtained from solving $\widehat{\mathbf{K}}\mathbf{u}_i = \mathbf{z}_i$, and $\mathbf{e} = [1, 0, 0, ..., 0]^\top$.
+where $\mathbf{e} = [1, 0, 0, ..., 0]^\top$.
 
 # Statement of Need
 
-GP research has undergone significant innovations in recent years, including advances in deep Gaussian processes (DGPs), preconditioned GPs, and unbiased GPs. Additionally, there has been a growing focus on improving the accuracy and stability of GP models for large datasets as well as accelerating computations in GP using modern hardware like graphics processing units (GPUs). Multiple GP packages have been released in recent years to address different computational challenges. The GPyTorch package [@Gardner:2018] is built on top of PyTorch to leverage GPU computing capabilities. Similarly, GPflow [@GPflow:2017; @GPflow:2020] leverages another deep learning framework, TensorFlow [@TensorFlow:2015], for GPU acceleration. GPy [@GPy:2014] is supported by NumPy [@Harris:2020] with limited GPU support.
+GP research has undergone significant innovations in recent years, including advances in deep Gaussian processes (DGPs) [@Balcan:2016], [@Damianou:2013], [@Jakkala:2021], [@Dutordoir:2021], preconditioned GPs [@Wenger:2022] [@Wagner:2025], and unbiased GPs [@Potapczynski:2021] [@Burt:2021]. Additionally, there has been a growing focus on improving the accuracy and stability of GP models for large datasets as well as accelerating computations in GP using modern hardware like graphics processing units (GPUs). Multiple GP packages have been released in recent years to address different computational challenges. The GPyTorch package [@Gardner:2018] is built on top of PyTorch to leverage GPU computing capabilities. Similarly, GPflow [@GPflow:2017; @GPflow:2020] leverages another deep learning framework, TensorFlow [@TensorFlow:2015], for GPU acceleration. GPy [@GPy:2014] is supported by NumPy [@Harris:2020] with some GPU support.
 
-The core idea in HiGP's development is leveraging new numerical algorithms and parallel computing techniques to reduce computational complexity and to improve computation efficiency of the iterative method in GP model training. Compared to existing packages, HiGP has three main advantages and contributions.
+The motivation for HiGP's development is to utilize new numerical algorithms and parallel computing techniques to reduce computational complexity and to improve computation efficiency of the iterative methods in GP model training. Compared to existing packages, HiGP has three main advantages and contributions.
 
-Firstly, HiGP addresses the efficiency of MatVec, the most performance-critical operation in iterative methods. Traditional methods populate and store $\mathbf{K}$ and $\partial \widehat{\mathbf{K}} / \partial \theta$ for MatVec, but the $\mathcal{O}(n^2)$ storage and computation costs become prohibitive for large datasets, such as when $n \ge 10,000$. HiGP utilizes two methods to address this issue: the $\mathcal{H}^2$ matrix and on-the-fly computation mode. For large 2D or 3D datasets (e.g. spatial data), the dense kernel matrix is compressed into a $\mathcal{H}^2$ matrix in HiGP, resulting in $\mathcal{O}(n)$ storage and computation costs. For large high-dimensional datasets, HiGP computes small blocks of the kernel matrix on-the-fly and immediately uses these blocks in MatVec before discarding them instead of storing them in memory. This on-the-fly mode allows HiGP to handle extremely large datasets on a computer with moderate memory size.
+Firstly, HiGP addresses the efficiency of MatVec, the most performance-critical operation in iterative methods. Traditional methods populate and store $\mathbf{K}$ and $\partial \widehat{\mathbf{K}} / \partial \theta$ for MatVec, but the $\mathcal{O}(n^2)$ storage and computation costs become prohibitive for large datasets, such as when $n \ge 10,000$. HiGP utilizes two methods to address this issue: the $\mathcal{H}^2$ matrix [@Hackbusch:2000, @Hackbusch:2002] and on-the-fly computation mode. For large 2D or 3D datasets (e.g. spatial data), the dense kernel matrix is compressed into a $\mathcal{H}^2$ matrix in HiGP, resulting in $\mathcal{O}(n)$ storage and computation costs. For large high-dimensional datasets, HiGP computes small blocks of the kernel matrix on-the-fly and immediately uses these blocks in MatVec before discarding them instead of storing them in memory. This on-the-fly mode allows HiGP to handle extremely large datasets on a computer with moderate memory size.
 
-Secondly, HiGP adopts a scalable computational approach: iterative solvers with robust preconditioner and $\mathcal{O}(n)$ computational complexity are available for all calculations in GP. In GP model training, changes in hyperparameters result in variations in the kernel matrix's spectrum. Direct methods are robust against changes in the matrix spectrum, but the $\mathcal{O}(n^3)$ computational costs make them unaffordable for large datasets. Iterative solvers are sensitive to the matrix spectrum and might fail to provide solutions with the desired accuracy. Existing GP packages usually use simple preconditioners, such as a very low-rank approximate factorization of the kernel matrix. However, these simple preconditioners may fail in certain cases. HiGP adopts the newly proposed AFN preconditioner, which is designed for robust preconditioning of kernel matrices. Numerical experiments demonstrate that AFN can significantly improve the accuracy and robustness of iterative solvers for kernel matrix systems.
+Secondly, HiGP adopts a scalable computational approach: iterative solvers with a robust preconditioner. In GP model training, changes in hyperparameters result in variations in the kernel matrix's spectrum. Direct methods are robust against changes in the matrix spectrum, but the $\mathcal{O}(n^3)$ computational costs make them unaffordable for large datasets. Iterative solvers are sensitive to the matrix spectrum and might fail to provide solutions with the desired accuracy. Existing GP packages usually use simple preconditioners, such as a low-rank Nyström approximate factorization of the kernel matrix [@Gardner:2018]. However, these simple preconditioners may fail when the kernel matix is not low rank, which is the case for certain kernel length scales. HiGP adopts the newly proposed AFN preconditioner, which is designed for robust preconditioning of kernel matrices. Numerical experiments demonstrate that AFN can significantly improve the accuracy and robustness of iterative solvers for kernel matrix systems.
 
-Lastly, HiGP uses an accurate and efficient hand-coded gradient calculation. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Equation~(\ref{eq:loss_grad})). Although autodiff is convenient, it has restrictions and might not be the most computationally efficient when handling complicated calculations. We manually derived the formulas for gradient computations and implemented them in HiGP. This hand-coded gradient is faster and more accurate than autodiff, allowing faster training of GP models.
+Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Equation~(\ref{eq:loss_grad})). Although autodiff is convenient and flexible, it has restrictions and might not be the most computationally efficient when handling complicated calculations. We manually derived the formulas for gradient computations and implemented them in HiGP. This hand-coded gradient is faster to compute and more accurate than autodiff, allowing faster training of GP models.
 
 # Design and Implementation
 
