@@ -71,21 +71,34 @@ $$
 \quad \theta \in \Theta. \tag{3}
 $$
 
-For small or moderate size datasets, $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, and $\partial \widehat{\mathbf{K}} / \partial \theta$ can be formed explicitly, and Formulas (2) and (3) can be calculated exactly. For large datasets, it is usually unaffordable to populate and store $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, or $\partial \widehat{\mathbf{K}} / \partial \theta$, as these matrices require $\mathcal{O}(n^2)$ space for storage and $\widehat{\mathbf{K}}^{-1}$ requires $\mathcal{O}(n^3)$ arithmetic operations to compute. Instead, using iterative methods is often a better option [@Michalis:2009; @Hensman:2013; @Wilson:2015; @Pleiss:2018]. In this approach, $\mathbf{K}^{-1}\mathbf{y}$ is approximated via the Preconditioned Conjugate Gradient (PCG) method [@Saad:2003]. The trace term $\text{tr}{(\widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta})}$ can be estimated by the Hutchinson estimator [@Hutchinson:1989; @Meyer:2021]:
+For small or moderate size datasets, $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, and $\partial \widehat{\mathbf{K}} / \partial \theta$ can be formed explicitly, and Formulas (2) and (3) can be calculated exactly. For large datasets, it is usually unaffordable to populate and store $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, or $\partial \widehat{\mathbf{K}} / \partial \theta$, as these matrices require $\mathcal{O}(n^2)$ space for storage and $\widehat{\mathbf{K}}^{-1}$ requires $\mathcal{O}(n^3)$ arithmetic operations to compute. Instead, using preconditioned iterative methods with preconditioner $M \approx \tilde{K}$ is often a better option [@Michalis:2009; @Hensman:2013; @Wilson:2015; @Pleiss:2018]. In this approach, $\mathbf{K}^{-1}\mathbf{y}$ is approximated via the Preconditioned Conjugate Gradient (PCG) method [@Saad:2003]. The trace term $\text{tr}{(\widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta})}$ can be rewritten as 
 $$
-\text{tr}{ \left( \widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \right)} 
-\approx \frac{1}{k} \sum_{i=1}^{k} \mathbf{z}_{i}^{\top} \widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \mathbf{z}_{i}, \tag{4}
+{\text{tr}}\left({{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right) + {\text{tr}}\left({\widehat{\mathbf{K}}^{-1}}\frac{\partial \widehat{\mathbf{K}}}{\partial \theta}-{{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right),
+$$
+and the second term can then be estimated by the Hutchinson estimator [@Hutchinson:1989; @Meyer:2021]:
+$$
+{\text{tr}}
+\left(
+  {\widehat{\mathbf{K}}^{-1}}\frac{\partial \widehat{\mathbf{K}}}{\partial \theta} - 
+  {{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}
+\right)
+\approx 
+\frac{1}{k} \sum_{i=1}^{k} \mathbf{z}_{i}^{\top} 
+\left(
+  {\widehat{\mathbf{K}}^{-1}}\frac{\partial \widehat{\mathbf{K}}}{\partial \theta} -
+  {{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}
+\right) \mathbf{z}_{i}, \tag{4}
 $$
 where $\mathbf{z}_{i} \sim \mathcal{N}(0, I), i = 1, \cdots, k$ are independent random vectors. To estimate $\log|\hat{K}|$, we use stochastic Lanczos quadrature [@Ubaru:2017] for $\text{tr}(\log|\hat{K}|)$. This method needs to sample $k_z$ independent vectors $\mathbf{z}_i \sim \mathcal{N}(0,I), i = 1, \cdots, k_z$ and solve linear systems
 $$
-\widehat{\mathbf{K}}\mathbf{u}_i = \mathbf{z}_i,\quad i=1,2,\ldots,k_z. \tag{6}
+\widehat{\mathbf{K}}\mathbf{u}_i = \mathbf{z}_i,\quad i=1,2,\ldots,k_z. \tag{5}
 $$
-using an iterative solver and a preconditioner. Let $T_{z_i}$ denote the tridiagonal matrix in the Lanczos method. Then,
+using PCG with preconditioner $M$. Let $T_{z_i}$ denote the tridiagonal matrix in the Lanczos method on matrix $\mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2}$. Using the identity $\log|\mathbf{K}|= \log|\mathbf{M}| + \log|\mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2}|$, we only apply the Hutchinson estimator to approximate the second term:
 $$
-\log|\widehat{\mathbf{K}}| = \text{tr} \left( \log \widehat{\mathbf{K}} \right) 
-\approx \frac{1}{k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}_{1}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}_{1},
+\log|\mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2}| = \text{tr} \left( \log \mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2} \right) 
+\approx \frac{1}{k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}_{1}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}_{1}, \tag{6}
 $$
-where $\mathbf{e} = [1, 0, 0, ..., 0]^\top$.
+where \mathbf{e} = [1, 0, 0, ..., 0]^\top$. This preconditioned trace estimation approach is particularly efficient when $\log|\mathbf{M}|$ and ${\text{tr}}\left( \mathbf{M}^{-1} \frac{\partial \mathbf{M}}{\partial \theta} \right)$ can be computed efficiently, leveraging the simpler structure of $\mathbf{M}$ compared to that of $\widehat{\mathbf{K}}$.
 
 # Statement of Need
 
