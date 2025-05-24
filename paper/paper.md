@@ -34,7 +34,7 @@ bibliography: paper.bib
 
 # Summary
 
-Gaussian Processes (GPs) [@Rasmussen:2005; @Murphy:2022; @Murphy:2023] are flexible, nonparametric Bayesian models widely used for regression and classification tasks due to their ability to capture complex data patterns and provide uncertainty quantification. Traditional GP implementations often face challenges in scalability for large datasets. To address these challenges, HiGP, a high-performance Python package, is designed for efficient Gaussian Process regression and classification across datasets of varying sizes. HiGP uses  iterative solvers to access large GP computations. It implements matrix-vector (MatVec) and matrix-matrix (MatMul) multiplication algorithms tailored to kernel matrices [@Xing:2019; @Huang:2020; @Cai:2023]. To improve the convergence of iterative methods, HiGP also integrates the recently developed Adaptive Factorized Nyström (AFN) preconditioner [@Zhao:2024]. Further, it directly implements the graidents of the log likelihood function to be optimized. HiGP can be used with PyTorch and other Python packages, allowing easy incorporation into existing machine learning and data analysis workflows.
+Gaussian Processes (GPs) [@Rasmussen:2005; @Murphy:2022; @Murphy:2023] are flexible, nonparametric Bayesian models widely used for regression and classification tasks due to their ability to capture complex data patterns and provide uncertainty quantification. Traditional GP implementations often face challenges in scalability for large datasets. To address these challenges, HiGP, a high-performance Python package, is designed for efficient Gaussian Process regression and classification across datasets of varying sizes. HiGP uses  iterative solvers to access large GP computations. It implements matrix-vector (MatVec) and matrix-matrix (MatMul) multiplication algorithms tailored to kernel matrices [@Xing:2019; @Huang:2020; @Cai:2023]. To improve the convergence of iterative methods, HiGP also integrates the recently developed Adaptive Factorized Nyström (AFN) preconditioner [@Zhao:2024]. Further, it directly implements the gradients of the log likelihood function to be optimized. HiGP can be used with PyTorch and other Python packages, allowing easy incorporation into existing machine learning and data analysis workflows.
 
 # Gaussian Processes
 
@@ -55,23 +55,23 @@ f^2
 \end{bmatrix}
 \end{pmatrix}. \tag{1}
 $$
-Here, $f$ and $s$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa(\mathbf{u}, \mathbf{v}): \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ is a kernel function, and $\kappa(\mathbf{X}, \mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa(\mathbf{X}_{i,:}, \mathbf{Y}_{j,:})$, where $\mathbf{X}_{i,:}$ denotes the $i$-th row of $\mathbf{X}$. Commonly used kernel functions include the Gaussian kernel (also known as the Radial Basis Function kernel) and Mat\'ern kernels. These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(\mathbf{u}, \mathbf{v}) = \exp(-\|\mathbf{u} - \mathbf{v}\|^2 / (2l^2))$ depends on the parameter $l$, typically known as the length scale.
+Here, $f > 0$ and $s \ge 0$ are real numbers, $\mathbf{I}$ is the identity matrix, $\kappa(\mathbf{u}, \mathbf{v}): \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ is a kernel function, and $\kappa(\mathbf{X}, \mathbf{Y})$ is a kernel matrix with the $(i,j)$-th entry defined as $\kappa(\mathbf{X}_{i,:}, \mathbf{Y}_{j,:})$, where $\mathbf{X}_{i,:}$ denotes the $i$-th row of $\mathbf{X}$. Commonly used kernel functions include the Gaussian kernel (also known as the Radial Basis Function kernel) and Mat\'ern kernels. These kernel functions typically depend on one or more kernel parameters. For example, the Gaussian kernel $\kappa(\mathbf{u}, \mathbf{v}) = \exp(-\|\mathbf{u} - \mathbf{v}\|^2 / (2l^2))$ depends on the parameter $l > 0$, typically known as the length scale.
 
-To find the $s$, $f$, and kernel parameters that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
+To find the $s$, $f$, and kernel parameter $l$ that best fit the data, an optimization process is generally required to minimize the negative log marginal likelihood:
 $$
 L(\Theta) = \frac{1}{2} \left( \mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1} \mathbf{y} 
 + \log|\widehat{\mathbf{K}}| + n\log 2\pi \right), \tag{2}
 $$
-where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $\kappa(\mathbf{X}, \mathbf{X}) + s \mathbf{I}$ and $\Theta$ denotes the hyperparameter set, which is $(s, f, l)$ for the Mat\'ern kernels. An optimization process usually requires the gradient of $L(\Theta)$ to optimize the hyperparameters:
+where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $\kappa(\mathbf{X}, \mathbf{X}) + s \mathbf{I}$ and $\Theta$ denotes the hyperparameter set $(s, f, l)$. An optimization process usually requires the gradient of $L(\Theta)$:
 $$
 \frac{\partial L}{\partial \theta} =
-\frac{1}{2} \left(-\mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1} 
+\frac{1}{2} \left(-\mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1}
 \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \widehat{\mathbf{K}}^{-1}\mathbf{y} +
 \text{tr}{\left( \widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta} \right)}\right),
 \quad \theta \in \Theta. \tag{3}
 $$
 
-For small or moderate size datasets, $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, and $\partial \widehat{\mathbf{K}} / \partial \theta$ can be formed explicitly, and Formulas (2) and (3) can be calculated exactly. For large datasets, it is usually unaffordable to populate and store $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, or $\partial \widehat{\mathbf{K}} / \partial \theta$, as these matrices require $\mathcal{O}(n^2)$ space for storage and $\widehat{\mathbf{K}}^{-1}$ requires $\mathcal{O}(n^3)$ arithmetic operations to compute. Instead, using preconditioned iterative methods with preconditioner $M \approx \tilde{K}$ is often a better option [@Michalis:2009; @Hensman:2013; @Wilson:2015; @Pleiss:2018]. In this approach, $\mathbf{K}^{-1}\mathbf{y}$ is approximated via the Preconditioned Conjugate Gradient (PCG) method [@Saad:2003]. The trace term $\text{tr}{(\widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta})}$ can be rewritten as 
+For small or moderate size datasets, $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, and $\partial \widehat{\mathbf{K}} / \partial \theta$ can be formed explicitly, and Formulas (2) and (3) can be calculated exactly. For large datasets, it is often intractable to populate and store $\widehat{\mathbf{K}}$, $\widehat{\mathbf{K}}^{-1}$, or $\partial \widehat{\mathbf{K}} / \partial \theta$, as these matrices require $\mathcal{O}(n^2)$ space for storage and $\widehat{\mathbf{K}}^{-1}$ requires $\mathcal{O}(n^3)$ arithmetic operations to compute. Instead, using preconditioned iterative methods with preconditioner $M \approx \tilde{K}$ is often a better option [Aune:2014; Zhang:2024; @Michalis:2009; @Hensman:2013; @Wilson:2015; @Pleiss:2018; Wenger:2022]. In this approach, $\mathbf{K}^{-1}\mathbf{y}$ is approximated via the Preconditioned Conjugate Gradient (PCG) method [@Saad:2003]. The trace term $\text{tr}{(\widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta})}$ can be rewritten as 
 $$
 {\text{tr}}\left({{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right) + {\text{tr}}\left({\widehat{\mathbf{K}}^{-1}}\frac{\partial \widehat{\mathbf{K}}}{\partial \theta}-{{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right),
 $$
@@ -89,7 +89,7 @@ $$
   {{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}
 \right) \mathbf{z}_{i}, \tag{4}
 $$
-where $\mathbf{z}_{i} \sim \mathcal{N}(0, I), i = 1, \cdots, k$ are independent random vectors. To estimate $\log|\hat{K}|$, we use stochastic Lanczos quadrature [@Ubaru:2017] for $\text{tr}(\log|\hat{K}|)$. This method needs to sample $k_z$ independent vectors $\mathbf{z}_i \sim \mathcal{N}(0,I), i = 1, \cdots, k_z$ and solve linear systems
+where $\mathbf{z}_{i} \sim \mathcal{N}(0, I), i = 1, \cdots, k$ are independent random vectors. To estimate $\log|\hat{\mathbf{K}}|$ in Equation (2), we use stochastic Lanczos quadrature [@Ubaru:2017] for $\text{tr}(\log|\hat{\mathbf{K}}|)$. This method needs to sample $k_z$ independent vectors $\mathbf{z}_i \sim \mathcal{N}(0,I), i = 1, \cdots, k_z$ and solve linear systems
 $$
 \widehat{\mathbf{K}}\mathbf{u}_i = \mathbf{z}_i,\quad i=1,2,\ldots,k_z. \tag{5}
 $$
@@ -98,7 +98,7 @@ $$
 \log|\mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2}| = \text{tr} \left( \log \mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2} \right) 
 \approx \frac{1}{k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}_{1}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}_{1}, \tag{6}
 $$
-where \mathbf{e} = [1, 0, 0, ..., 0]^\top$. This preconditioned trace estimation approach is particularly efficient when $\log|\mathbf{M}|$ and ${\text{tr}}\left( \mathbf{M}^{-1} \frac{\partial \mathbf{M}}{\partial \theta} \right)$ can be computed efficiently, leveraging the simpler structure of $\mathbf{M}$ compared to that of $\widehat{\mathbf{K}}$.
+where \mathbf{e}_1 = [1, 0, 0, ..., 0]^\top$. This preconditioned trace estimation approach is particularly efficient when $\log|\mathbf{M}|$ and ${\text{tr}}\left( \mathbf{M}^{-1} \frac{\partial \mathbf{M}}{\partial \theta} \right)$ can be computed efficiently, leveraging the simpler structure of $\mathbf{M}$ compared to that of $\widehat{\mathbf{K}}$. The AFN preconditioner used in HiGP has a triangular factorization structure, which makes such computation efficient.
 
 # Statement of Need
 
@@ -110,7 +110,7 @@ Firstly, HiGP addresses the efficiency of MatVec, the most performance-critical 
 
 Secondly, HiGP adopts a scalable computational approach: iterative solvers with a robust preconditioner. In GP model training, changes in hyperparameters result in variations in the kernel matrix's spectrum. Direct methods are robust against changes in the matrix spectrum, but the $\mathcal{O}(n^3)$ computational costs make them unaffordable for large datasets. Iterative solvers are sensitive to the matrix spectrum and might fail to provide solutions with the desired accuracy. Existing GP packages usually use simple preconditioners, such as a low-rank Nyström approximate factorization of the kernel matrix [@Gardner:2018]. However, these simple preconditioners may fail when the kernel matix is not low rank, which is the case for certain kernel length scales. HiGP adopts the newly proposed AFN preconditioner, which is designed for robust preconditioning of kernel matrices. Numerical experiments demonstrate that AFN can significantly improve the accuracy and robustness of iterative solvers for kernel matrix systems.
 
-Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Equation~(\ref{eq:loss_grad})). Although autodiff is convenient and flexible, it could give inaccurate results in certain cases [@Huckelheim:2023] and it may not be the most computationally efficient when handling complicated calculations. We manually derived the formulas for gradient computations and implemented them in HiGP. This hand-coded gradient is faster to compute and more accurate than autodiff, allowing faster training of GP models.
+Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Equation~(\ref{eq:loss_grad})). Although autodiff is convenient and flexible, it is very inefficient when used to evaluate derivative of quantitives that are computed iteratively, e.g., with PCG, due to long chain rule expressions resulting from the loop.
 
 # Design and Implementation
 
