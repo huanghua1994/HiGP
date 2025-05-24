@@ -62,7 +62,7 @@ $$
 L(\Theta) = \frac{1}{2} \left( \mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1} \mathbf{y} 
 + \log|\widehat{\mathbf{K}}| + n\log 2\pi \right), \tag{2}
 $$
-where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $\kappa(\mathbf{X}, \mathbf{X}) + s \mathbf{I}$ and $\Theta$ denotes the hyperparameter set $(s, f, l)$. An optimization process usually requires the gradient of $L(\Theta)$:
+where $\widehat{\mathbf{K}}$ denotes the regularized kernel matrix $f^2 \kappa(\mathbf{X}, \mathbf{X}) + s \mathbf{I}$ and $\Theta$ denotes the hyperparameter set $(s, f, l)$. An optimization process usually requires the gradient of $L(\Theta)$:
 $$
 \frac{\partial L}{\partial \theta} =
 \frac{1}{2} \left(-\mathbf{y}^{\top} \widehat{\mathbf{K}}^{-1}
