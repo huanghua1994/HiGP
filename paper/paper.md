@@ -1,5 +1,3 @@
-```text
-% This text block is just to allow some editors to render the markdown file correctly. Remove the text block before submission. 
 ---
 title: 'HiGP: A high-performance Python package for Gaussian Processes'
 tags:
@@ -30,7 +28,11 @@ affiliations:
    index: 2
 date: 3 July 2025
 bibliography: paper.bib
-```
+tags:
+  - Gaussian Process
+  - iterative method
+  - preconditioner
+---
 
 # Summary
 
@@ -98,7 +100,7 @@ $$
 \log|\mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2}| = \text{tr} \left( \log \mathbf{M}^{-1/2}\widehat{\mathbf{K}}\mathbf{M}^{-1/2} \right) 
 \approx \frac{1}{k_z} \sum_{i=1}^{k_z} \|\mathbf{z}_i\|^2 \mathbf{e}_{1}^\top \log(\mathbf{T}_{\mathbf{z}_i}) \mathbf{e}_{1}, \tag{6}
 $$
-where \mathbf{e}_1 = [1, 0, 0, ..., 0]^\top$. This preconditioned trace estimation approach is particularly efficient when $\log|\mathbf{M}|$ and ${\text{tr}}\left( \mathbf{M}^{-1} \frac{\partial \mathbf{M}}{\partial \theta} \right)$ can be computed efficiently, leveraging the simpler structure of $\mathbf{M}$ compared to that of $\widehat{\mathbf{K}}$. The AFN preconditioner used in HiGP has a triangular factorization structure, which makes such computation efficient.
+where $\mathbf{e}_1 = [1, 0, 0, ..., 0]^\top$. This preconditioned trace estimation approach is particularly efficient when $\log|\mathbf{M}|$ and ${\text{tr}}\left( \mathbf{M}^{-1} \frac{\partial \mathbf{M}}{\partial \theta} \right)$ can be computed efficiently, leveraging the simpler structure of $\mathbf{M}$ compared to that of $\widehat{\mathbf{K}}$. The AFN preconditioner used in HiGP has a triangular factorization structure, which makes such computation efficient.
 
 # Statement of Need
 
@@ -110,7 +112,7 @@ Firstly, HiGP addresses the efficiency of MatVec, the most performance-critical 
 
 Secondly, HiGP adopts a scalable computational approach: iterative solvers with a robust preconditioner. In GP model training, changes in hyperparameters result in variations in the kernel matrix's spectrum. Direct methods are robust against changes in the matrix spectrum, but the $\mathcal{O}(n^3)$ computational costs make them unaffordable for large datasets. Iterative solvers are sensitive to the matrix spectrum and might fail to provide solutions with the desired accuracy. Existing GP packages usually use simple preconditioners, such as a low-rank Nyström approximate factorization of the kernel matrix [@Gardner:2018]. However, these simple preconditioners may fail when the kernel matix is not low rank, which is the case for certain kernel length scales. HiGP adopts the newly proposed AFN preconditioner, which is designed for robust preconditioning of kernel matrices. Numerical experiments demonstrate that AFN can significantly improve the accuracy and robustness of iterative solvers for kernel matrix systems.
 
-Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Equation~(\ref{eq:loss_grad})). Although autodiff is convenient and flexible, it is very inefficient when used to evaluate derivatives of quantitives that are computed iteratively, e.g., with PCG, due to long chain rule expressions resulting from the iterations.
+Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on automatic differentiation (autodiff) provided in PyTorch to calculate gradients (Formula (3)). Although autodiff is convenient and flexible, it is very inefficient when used to evaluate derivatives of quantitives that are computed iteratively, e.g., with PCG, due to long chain rule expressions resulting from the iterations.
 
 # Design and Implementation
 
@@ -148,9 +150,3 @@ pred = higp.gpr_prediction(train_x, train_y, test_x, higp.GaussianKernel, params
 ```
 
 We note that the HiGP Python interfaces are *stateless*. For example, the same arguments `train_x`, `train_y`, and `higp.GaussianKernel` are passed into two functions `higp.gprproblem.setup` and `higp.gpr_prediction` in Listing 1. This design aims to simplify the interface and decouple different operations. A user can train and use different GP models with the same or different data and configurations in the same file.
-
-# Acknowledgements
-
-TODO
-
-# References
