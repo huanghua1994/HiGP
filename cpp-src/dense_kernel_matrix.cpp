@@ -1,7 +1,16 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+
+#ifdef __APPLE__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <mach/mach.h>
+#include <mach/mach_host.h>
+#else
 #include <sys/sysinfo.h>
+#endif
+
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
@@ -13,6 +22,25 @@
 #include "common.h"
 #include "cpu_linalg.hpp"
 #include "utils.h"
+
+static size_t get_available_memory() {
+#ifdef __APPLE__
+    vm_size_t page_size;
+    vm_statistics64_data_t vm_stat;
+    mach_msg_type_number_t host_size = sizeof(vm_stat) / sizeof(natural_t);
+    mach_port_t host_port = mach_host_self();
+    host_page_size(host_port, &page_size);
+    if (host_statistics64(host_port, HOST_VM_INFO64, 
+                         (host_info64_t)&vm_stat, &host_size) != KERN_SUCCESS) {
+        // Fallback
+        return 1024ULL * 1024ULL * 1024ULL;
+    }
+    uint64_t available_pages = vm_stat.free_count + vm_stat.inactive_count;
+    return (size_t)(available_pages * page_size);
+#else
+    return (size_t)get_avphys_pages() * (size_t)sysconf(_SC_PAGESIZE);
+#endif
+}
 
 template<typename VT>
 static int is_same_c0c1(
@@ -122,9 +150,8 @@ int dense_krnl_mat_populate(dense_krnl_mat_p dkmat)
     krnl_grad_func krnl_grad = NULL;
     get_krnl_grad_func(krnl_id, NULL, NULL, &krnl_grad);
 
-    // Get the available memory size in bytes
-    // Reference: https://stackoverflow.com/questions/14386856/c-check-currently-available-free-ram
-    size_t avail_mem_bytes = (size_t) get_avphys_pages() * (size_t) sysconf(_SC_PAGESIZE);
+    // Get the available memory size in bytes (cross-platform)
+    size_t avail_mem_bytes = get_available_memory();
     size_t kmat_bytes  = nrow * ncol * val_bytes;
     if ((2 * kmat_bytes) <= ((avail_mem_bytes / 10) * 9))  // Use at most 90% of available memory
     {
