@@ -21,7 +21,7 @@ This is a **temporary demo version** for Apple Silicon Macs. Official pip suppor
 - Matplotlib (optional, for plotting)
 
 ```bash
-pip3 install numpy scipy torch torchvision matplotlib pandas requests ipykernel ipywidgets
+pip install numpy scipy torch torchvision matplotlib pandas requests ipykernel ipywidgets
 ```
 
 ## Advanced Build Instructions
