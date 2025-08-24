@@ -66,7 +66,7 @@ The "ezgpr_torch" interface uses the [PyTorch Adam optimizer](https://pytorch.or
 We can use the following code to visualize the predictions:
 
 ```python
-plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 5))
 plt.plot(test_x, test_y, 'ro', markersize=2)
 plt.plot(test_x, pred.prediction_mean, 'b-')
 plt.fill_between(test_x, pred.prediction_mean - 1.96 * pred.prediction_stddev, pred.prediction_mean + 1.96 * pred.prediction_stddev, alpha=0.5)
@@ -113,7 +113,7 @@ pred = higp.gpr_prediction(data_train=train_x,
                            label_train=train_y,
                            data_prediction=test_x,
                            kernel_type=higp.GaussianKernel,
-                           pyparams=model.get_params())
+                           gp_params=model.get_params())
 ```
 
 The obtained `pred` is the same as the output of `higp.ezgpr_torch()`.
