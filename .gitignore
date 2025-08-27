@@ -40,5 +40,5 @@ py-interface/build/*
 py-interface/dist/*
 py-interface/*.egg-info/*
 
-py-notebook/.ipynb_checkpoints/*
-py-notebook/tmp/*
+py-demos/.ipynb_checkpoints/*
+py-demos/tmp/*

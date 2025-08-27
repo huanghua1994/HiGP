@@ -430,6 +430,7 @@ def ezgpr_torch(train_x,
                                             afn_rank=afn_rank_lq,
                                             afn_lfil=afn_lfil_lq,
                                             niter=niter_lq,
+                                            seed=seed,
                                             nvec=nvec_lq)
 
     model = GPRModel(gprproblem, l=l_init, f=f_init, s=s_init, dtype=dtype_torch)
@@ -585,6 +586,7 @@ def ezgpc_torch(train_x,
                                             afn_rank=afn_rank_lq,
                                             afn_lfil=afn_lfil_lq,
                                             niter=niter_lq,
+                                            seed=seed,
                                             nvec=nvec_lq)
 
     model = GPCModel(gpcproblem, num_classes, l=l_init, f=f_init, s=s_init, dtype=dtype_torch)

@@ -1284,10 +1284,11 @@ static PyObject* krnlmat_setup(PyObject* self, PyObject* args, PyObject *kwds)
         return NULL;
     }
     
-    if (seed > 0)
+    if (seed >= 0)
     {
         srand(seed);
-        printf("Change random seed to %d\n",seed);
+        srand48(seed);
+        printf("Set random seed to %d\n",seed);
     }
 
     if (nthreads > 0)
@@ -1495,10 +1496,11 @@ static PyObject* precond_setup(PyObject* self, PyObject* args, PyObject *kwds)
         return NULL;
     }
 
-    if (seed > 0)
+    if (seed >= 0)
     {
         srand(seed);
-        printf("Change random seed to %d\n",seed);
+        srand48(seed);
+        printf("Set random seed to %d\n",seed);
     }
 
     if (nthreads > 0)
@@ -1796,10 +1798,11 @@ static PyObject* gpr_problem_setup(PyObject* self, PyObject* args, PyObject *kwd
         printf("Change OpenMP threads to %d\n",nthreads);
     }
 
-    if (seed > 0)
+    if (seed >= 0)
     {
         srand(seed);
-        printf("Change random seed to %d\n",seed);
+        srand48(seed);
+        printf("Set random seed to %d\n",seed);
     }
 
     // Each row is a feature, each column is a sample, we use the Fortran column-major style
@@ -2023,10 +2026,11 @@ static PyObject* gpc_problem_setup(PyObject* self, PyObject* args, PyObject *kwd
         printf("Change OpenMP threads to %d\n",nthreads);
     }
 
-    if (seed > 0)
+    if (seed >= 0)
     {
         srand(seed);
-        printf("Change random seed to %d\n",seed);
+        srand48(seed);
+        printf("Set random seed to %d\n",seed);
     }
 
     // Each row is a feature, each column is a sample, we use the Fortran column-major style
@@ -2298,15 +2302,16 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
     int    niter       = 50;
     int    nthreads    = -1;        // Max number of OpenMP threads, if -1 we do not apply any change
     double tol         = 1e-6;
+    int    seed        = -1;
     
     // Parse parameters
     static char *kwlist[] = {
         "data_train", "label_train", "data_prediction", "kernel_type", "gp_params",
-        "nthreads", "exact_gp", "mvtype", "afn_rank", "afn_lfil", "niter", "tol", NULL
+        "nthreads", "exact_gp", "mvtype", "afn_rank", "afn_lfil", "niter", "tol", "seed", NULL
     };
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiid", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiiidi", kwlist,
         &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, 
-        &gp_params, &nthreads, &exact_gp, &mvtype, &rank, &lfil, &niter, &tol))
+        &gp_params, &nthreads, &exact_gp, &mvtype, &rank, &lfil, &niter, &tol, &seed))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -2316,6 +2321,13 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
     {
         omp_set_num_threads(nthreads);
         printf("Change OpenMP threads to %d\n",nthreads);
+    }
+
+    if (seed >= 0)
+    {
+        srand(seed);
+        srand48(seed);
+        printf("Set random seed to %d\n", seed);
     }
 
     // Each row is a feature, each column is a sample, we use the Fortran column-major style
@@ -2469,15 +2481,16 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
     int    nsample     = 256;
     int    nthreads    = -1;        // Max number of OpenMP threads, if -1 we do not apply any change
     double tol         = 1e-6;
+    int    seed        = -1;
 
     // Parse parameters
     static char *kwlist[] = {
         "data_train", "label_train", "data_prediction", "kernel_type", "gp_params", 
-        "nthreads", "exact_gp", "mvtype", "nsample", "afn_rank", "afn_lfil", "niter", "tol", NULL
+        "nthreads", "exact_gp", "mvtype", "nsample", "afn_rank", "afn_lfil", "niter", "tol", "seed", NULL
     };
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiiid", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiiidi", kwlist,
         &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, &gp_params,
-        &nthreads, &exact_gp, &mvtype, &nsample, &rank, &lfil, &niter, &tol))
+        &nthreads, &exact_gp, &mvtype, &nsample, &rank, &lfil, &niter, &tol, &seed))
     {
         PyErr_SetString(PyExc_ValueError, "Error in the input argument!");
         return NULL;
@@ -2487,6 +2500,13 @@ static PyObject* HiGP_Cext_gpc_prediction(PyObject* self, PyObject *args, PyObje
     {
         omp_set_num_threads(nthreads);
         printf("Change OpenMP threads to %d\n",nthreads);
+    }
+
+    if (seed >= 0)
+    {
+        srand(seed);
+        srand48(seed);
+        printf("Set random seed to %d\n", seed);
     }
 
     // Each row is a feature, each column is a sample, we use the Fortran column-major style
