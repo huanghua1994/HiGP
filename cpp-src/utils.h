@@ -16,8 +16,12 @@ extern "C" {
 #define INT_MSIZE sizeof(int)
 #define DBL_MSIZE sizeof(double)
 
+#ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
+#endif
+#ifndef MAX
 #define MAX(a, b)  ((a) > (b) ? (a) : (b))
+#endif
 
 #define INFO_PRINTF(fmt, ...)                       \
     do                                              \

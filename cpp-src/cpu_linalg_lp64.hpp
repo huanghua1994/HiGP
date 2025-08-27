@@ -31,7 +31,12 @@ static int xgemv_(
     const float *beta, float *y, const int *incy
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    sgemv_(trans, m, n, alpha, a, lda, x, incx, beta, y, incy);
+    return 0;
+#else
     return sgemv_(trans, m, n, alpha, a, lda, x, incx, beta, y, incy);
+#endif
 }
 static int xgemv_(
     const char *trans, const int *m, const int *n,
@@ -39,7 +44,12 @@ static int xgemv_(
     const double *beta, double *y, const int *incy
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    dgemv_(trans, m, n, alpha, a, lda, x, incx, beta, y, incy);
+    return 0;
+#else
     return dgemv_(trans, m, n, alpha, a, lda, x, incx, beta, y, incy);
+#endif
 }
 
 static int xgemm_(
@@ -48,7 +58,12 @@ static int xgemm_(
     const float *beta, float *c, const int *ldc
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    sgemm_(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+    return 0;
+#else
     return sgemm_(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+#endif
 }
 static int xgemm_(
     const char *transa, const char *transb, const int *m, const int *n, const int *k,
@@ -56,7 +71,12 @@ static int xgemm_(
     const double *beta, double *c, const int *ldc
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    dgemm_(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+    return 0;
+#else
     return dgemm_(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+#endif
 }
 
 static int xtrsm_(
@@ -64,14 +84,24 @@ static int xtrsm_(
     const float  *alpha, const float  *a, const int *lda, float  *b, const int *ldb
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    strsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb);
+    return 0;
+#else
     return strsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb);
+#endif
 }
 static int xtrsm_(
     const char *side, const char *uplo, const char *transa, const char *diag, const int *m, const int *n, 
     const double *alpha, const double *a, const int *lda, double *b, const int *ldb
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    dtrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb);
+    return 0;
+#else
     return dtrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb);
+#endif
 }
 
 static int xsyrk_(
@@ -79,14 +109,24 @@ static int xsyrk_(
     const float  *a, const int *lda, const float  *beta, float  *c, const int *ldc
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    ssyrk_(uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+    return 0;
+#else
     return ssyrk_(uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+#endif
 }
 static int xsyrk_(
     const char *uplo, const char *trans, const int *n, const int *k, const double *alpha, 
     const double *a, const int *lda, const double *beta, double *c, const int *ldc
 )
 {
+#ifdef USE_ACCELERATE_LP64
+    dsyrk_(uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+    return 0;
+#else
     return dsyrk_(uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+#endif
 }
 
 // ========== LAPACK ========== //

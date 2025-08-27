@@ -1,4 +1,5 @@
 import os
+import platform
 import numpy
 import setuptools
 import setuptools.command.build_py
@@ -11,11 +12,77 @@ cflags  = ["-g", "-std=c++14", "-O2", "-fopenmp"]
 cflags += ["-Wno-unused-result", "-Wno-unused-function", "-Wno-unused-variable", "-Wno-cpp"]
 lflags  = ["-lgfortran", "-lm", '-fopenmp']
 
-# For the release build, target the Haswell architecture (AVX2)
-if "BUILD_HIGP_RELEASE" in os.environ:
-    cflags += ["-march=haswell"]
+if platform.system() == 'Darwin' and platform.machine() == 'arm64':
+    # Apple Silicon: OpenMP + Accelerate dual integration
+    print("Building for Apple Silicon with OpenMP + Accelerate")
+    
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '13.3'
+    
+    # Remove default -fopenmp from cflags and lflags and add macOS-specific version
+    cflags = [flag for flag in cflags if flag != "-fopenmp"]
+    lflags = [flag for flag in lflags if flag != "-fopenmp"]
+    cflags = [flag for flag in cflags if flag != "-std=c++14"]
+    cflags += ["-Xpreprocessor", "-fopenmp"]
+    
+    omp_found = False
+    
+    # PyTorch's bundled OpenMP
+    try:
+        import torch
+        torch_path = os.path.dirname(torch.__file__)
+        torch_omp_include = os.path.join(torch_path, 'include')
+        torch_omp_lib = os.path.join(torch_path, 'lib')
+        torch_omp_header = os.path.join(torch_omp_include, 'omp.h')
+        torch_omp_dylib = os.path.join(torch_omp_lib, 'libomp.dylib')
+        
+        if os.path.exists(torch_omp_header) and os.path.exists(torch_omp_dylib):
+            print(f"Found OpenMP in PyTorch: {torch_omp_lib}")
+            cflags += [f"-I{torch_omp_include}"]
+            lflags += [f"-L{torch_omp_lib}", "-lomp"]
+            omp_found = True
+    except ImportError:
+        pass
+    
+    # Fallback to Homebrew OpenMP
+    if not omp_found:
+        homebrew_omp_paths = [
+            "/opt/homebrew/opt/libomp",  # ARM64 Homebrew
+            "/usr/local/opt/libomp"      # Intel Homebrew
+        ]
+        
+        for homebrew_path in homebrew_omp_paths:
+            if os.path.exists(os.path.join(homebrew_path, "include", "omp.h")):
+                print(f"Found OpenMP in Homebrew: {homebrew_path}")
+                cflags += [f"-I{homebrew_path}/include"]
+                lflags += [f"-L{homebrew_path}/lib", "-lomp"]
+                omp_found = True
+                break
+        
+        if not omp_found:
+            print("WARNING: OpenMP not found! Please install with: brew install libomp")
+            print("         Or ensure PyTorch is installed with OpenMP support")
+    
+    cflags += ["-DACCELERATE_NEW_LAPACK", "-DUSE_ACCELERATE_LP64"]
+    lflags += ["-framework", "Accelerate"]
+    
+    lflags = [flag for flag in lflags if flag != "-lgfortran"]
+    
+    # TODO
+    if "BUILD_HIGP_RELEASE" in os.environ:
+        pass
+    else:
+        pass
+    
+    # Skip lsof-based BLAS detection for macOS
+    skip_blas_detection = True
 else:
-    cflags += ["-march=native"]
+    # For the release build, target the Haswell architecture (AVX2)
+    if "BUILD_HIGP_RELEASE" in os.environ:
+        cflags += ["-march=haswell"]
+    else:
+        cflags += ["-march=native"]
+    
+    skip_blas_detection = False
 
 # Get the linalg library (MKL or OpenBLAS) numpy is using
 def get_numpy_linalg_lib():
@@ -47,14 +114,17 @@ def get_numpy_linalg_lib():
     lib_name = lib_name_noext[3:]
     return has_mkl, has_openblas, lib_dir, lib_name
 
-has_mkl, has_openblas, lib_dir, lib_name = get_numpy_linalg_lib()
-lflags += ["-L", lib_dir, "-l", lib_name]
-if has_mkl > 0:
-    cflags += ["-DUSE_MKL"]
-if has_openblas == 32:
-    cflags += ["-DUSE_OPENBLAS_LP64"]
-if has_openblas == 64:
-    cflags += ["-DUSE_OPENBLAS_ILP64"]
+if not skip_blas_detection:
+    has_mkl, has_openblas, lib_dir, lib_name = get_numpy_linalg_lib()
+    lflags += ["-L", lib_dir, "-l", lib_name]
+    if has_mkl > 0:
+        cflags += ["-DUSE_MKL"]
+    if has_openblas == 32:
+        cflags += ["-DUSE_OPENBLAS_LP64"]
+    if has_openblas == 64:
+        cflags += ["-DUSE_OPENBLAS_ILP64"]
+else:
+    print("Skipping BLAS detection - using Accelerate Framework")
 
 higp_cext = setuptools.Extension(
     'higp_cext',

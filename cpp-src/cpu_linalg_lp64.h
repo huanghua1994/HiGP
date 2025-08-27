@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+// When using Accelerate Framework, these functions are already declared in Accelerate headers
+#ifndef USE_ACCELERATE_LP64
+
 // ========== BLAS ========== //
 
 float  snrm2_(const int *n, const float  *x, const int *incx);
@@ -115,6 +118,8 @@ void dgesvd_(
     double *a, const int *lda, double *s, double *u, const int *ldu, 
     double *vt, const int *ldvt, double *work, const int *lwork, int *info
 );
+
+#endif // USE_ACCELERATE_LP64
 
 #ifdef __cplusplus
 }
