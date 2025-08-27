@@ -2309,7 +2309,7 @@ static PyObject* HiGP_Cext_gpr_prediction(PyObject* self, PyObject *args, PyObje
         "data_train", "label_train", "data_prediction", "kernel_type", "gp_params",
         "nthreads", "exact_gp", "mvtype", "afn_rank", "afn_lfil", "niter", "tol", "seed", NULL
     };
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiiidi", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!O!O!iO!|iiiiiidi", kwlist,
         &PyArray_Type, &data_train, &PyArray_Type, &label_train, &PyArray_Type, &data_prediction, &kernel_type, &PyArray_Type, 
         &gp_params, &nthreads, &exact_gp, &mvtype, &rank, &lfil, &niter, &tol, &seed))
     {

@@ -1,0 +1,49 @@
+{
+  "name": "test03",
+  "functions": [
+    "rosenbrock",
+    "rastrigin",
+    "branin"
+  ],
+  "dimensions": [
+    2,
+    20
+  ],
+  "n_train_configs": {
+    "2": [
+      30000
+    ],
+    "20": [
+      30000
+    ]
+  },
+  "n_test": 100,
+  "noise_levels": [
+    0.01,
+    0.1
+  ],
+  "n_repeats": 3,
+  "higp_params": {
+    "maxits": 50,
+    "lr": 0.01,
+    "train_cg_niter": 20,
+    "train_afn_rank": 10,
+    "train_afn_lfil": 0,
+    "pred_cg_niter": 50,
+    "pred_afn_rank": 100,
+    "pred_afn_lfil": 0,
+    "mvtype": 0,
+    "train_cg_nvec": 10,
+    "train_max_preconditioner_size": 10,
+    "pred_max_preconditioner_size": 100
+  },
+  "gpytorch_params": {
+    "maxits": 50,
+    "lr": 0.01,
+    "train_max_preconditioner_size": 10,
+    "pred_max_preconditioner_size": 100,
+    "train_cg_niter": 20,
+    "pred_cg_niter": 50
+  },
+  "seed": 42
+}

@@ -113,10 +113,10 @@ pred = higp.gpr_prediction(data_train=train_x,
                            label_train=train_y,
                            data_prediction=test_x,
                            kernel_type=higp.GaussianKernel,
-                           pyparams=model.get_params())
+                           gp_params=model.get_params())
 ```
 
-`train_x`, `train_y`, and `kernel_type` are the same as what we used for calling `higp.gprproblem.setup()`, `data_prediction=test_x` specifies the prediction dataset, and `pyparams=model.get_params()` uses the trained pre-transformed hyperparameters for prediction. If we want to make a prediction with another set of hyperparameters, we simply provide a NumPy 1D array of length 3 containing pre-transformed hyperparameters $[l, f, s]$.
+`train_x`, `train_y`, and `kernel_type` are the same as what we used for calling `higp.gprproblem.setup()`, `data_prediction=test_x` specifies the prediction dataset, and `gp_params=model.get_params()` uses the trained pre-transformed hyperparameters for prediction. If we want to make a prediction with another set of hyperparameters, we simply provide a NumPy 1D array of length 3 containing pre-transformed hyperparameters $[l, f, s]$.
 
 The returned structure `pred` has two members: `pred.prediction_mean` and `pred.prediction_stddev`, they are NumPy 1D arrays of length $M$. `prediction_mean` is the predicted mean values, and `prediction_stddev` is the standard deviation of prediction. For each prediction point `test_x[:, i]`, its prediction mean is `prediction_mean[i]`, and its 95\% prediction confidence range is `[prediction_mean[i] - 1.96 * prediction_stddev[i], prediction_mean[i] + 1.96 * prediction_stddev[i]]`.
 
