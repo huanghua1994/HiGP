@@ -27,7 +27,7 @@ def suppress_output():
         os.close(old_stdout_fd)
         os.close(old_stderr_fd)
 
-def run_higp(train_x, train_y, test_x, test_y, params, seed=42):
+def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42):
     """Run HiGP on the given data
 
     Args:
@@ -36,45 +36,64 @@ def run_higp(train_x, train_y, test_x, test_y, params, seed=42):
         test_x: Test features (M, D)
         test_y: Test targets (M,)
         params: Dictionary with HiGP parameters
+        dtype_str: Data type string ("float32" or "float64")
         seed: Random seed
 
     Returns:
         Dictionary with results
     """
+    if dtype_str == "float64":
+        torch.set_default_dtype(torch.float64)
+        np_dtype = np.float64
+        torch_dtype = torch.float64
+    else:
+        torch.set_default_dtype(torch.float32)
+        np_dtype = np.float32
+        torch_dtype = torch.float32
+
     torch.manual_seed(seed)
     np.random.seed(seed)
 
     # Convert to HiGP format: (D, N)
-    train_x_higp = np.ascontiguousarray(train_x.T).astype(np.float32)
-    train_y_higp = np.ascontiguousarray(train_y).astype(np.float32)
-    test_x_higp = np.ascontiguousarray(test_x.T).astype(np.float32)
+    train_x_higp = np.ascontiguousarray(train_x.T).astype(np_dtype)
+    train_y_higp = np.ascontiguousarray(train_y).astype(np_dtype)
+    test_x_higp = np.ascontiguousarray(test_x.T).astype(np_dtype)
+
+    kernel_map = {
+        "gaussian": higp.GaussianKernel,
+        "matern32": higp.Matern32Kernel,
+        "matern52": higp.Matern52Kernel,
+    }
+    kernel_type = kernel_map.get(
+        params.get("kernel", "gaussian").lower(), higp.GaussianKernel
+    )
 
     with suppress_output():
         gprproblem = higp.gprproblem.setup(
             data=train_x_higp,
             label=train_y_higp,
-            kernel_type=higp.GaussianKernel,
+            kernel_type=kernel_type,
             mvtype=params.get("mvtype", 0),
             niter=params.get("train_cg_niter", params.get("cg_iters", 20)),
-            nvec=params.get("train_cg_nvec", 10), # same as gpytorch 
-            afn_rank=params.get("train_afn_rank", params.get("afn_rank", 5)),
-            afn_lfil=params.get("train_afn_lfil", params.get("afn_lfil", 5)),
+            nvec=params.get("train_cg_nvec", 10),  # same as gpytorch
+            afn_rank=params.get("train_afn_rank", params.get("afn_rank", 10)),
+            afn_lfil=params.get("train_afn_lfil", params.get("afn_lfil", 0)),
             seed=seed,
         )
 
-    model = higp.GPRModel(gprproblem, dtype=torch.float32)
+    model = higp.GPRModel(gprproblem, dtype=torch_dtype)
     with suppress_output():
         init_pred = higp.gpr_prediction(
             data_train=train_x_higp,
             label_train=train_y_higp,
             data_prediction=test_x_higp,
-            kernel_type=higp.GaussianKernel,
+            kernel_type=kernel_type,
             gp_params=model.get_params(),
             mvtype=params.get("mvtype", 0),
             niter=params.get("pred_cg_niter", params.get("cg_iters", 50)),
             tol=params.get("pred_cg_tol", 1e-2),
-            afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 50)),
-            afn_lfil=params.get("pred_afn_lfil", params.get("afn_lfil", 50)),
+            afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 100)),
+            afn_lfil=params.get("pred_afn_lfil", params.get("afn_lfil", 0)),
         )
     init_y_pred = init_pred.prediction_mean
     init_y_std = init_pred.prediction_stddev
@@ -95,16 +114,31 @@ def run_higp(train_x, train_y, test_x, test_y, params, seed=42):
             data_train=train_x_higp,
             label_train=train_y_higp,
             data_prediction=test_x_higp,
-            kernel_type=higp.GaussianKernel,
+            kernel_type=kernel_type,
             gp_params=model.get_params(),
             mvtype=params.get("mvtype", 0),
             niter=params.get("pred_cg_niter", params.get("cg_iters", 50)),
-            tol=params.get("pred_cg_tol", 1e-6),
-            afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 50)),
-            afn_lfil=params.get("pred_afn_lfil", params.get("afn_lfil", 50)),
+            tol=params.get("pred_cg_tol", 1e-2),
+            afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 100)),
+            afn_lfil=params.get("pred_afn_lfil", params.get("afn_lfil", 0)),
         )
 
     t_pred_end = time.perf_counter()
+
+    # Verify dtype precision matches expected configuration
+    expected_dtype = np_dtype
+    assert (
+        pred.prediction_mean.dtype == expected_dtype
+    ), f"HiGP prediction mean dtype {pred.prediction_mean.dtype} does not match expected {expected_dtype}"
+    assert (
+        pred.prediction_stddev.dtype == expected_dtype
+    ), f"HiGP prediction stddev dtype {pred.prediction_stddev.dtype} does not match expected {expected_dtype}"
+    assert (
+        init_y_pred.dtype == expected_dtype
+    ), f"HiGP initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
+    assert (
+        init_y_std.dtype == expected_dtype
+    ), f"HiGP initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
 
     results = {
         "y_pred": pred.prediction_mean,
@@ -117,6 +151,7 @@ def run_higp(train_x, train_y, test_x, test_y, params, seed=42):
         "init_loss": float(loss_history[0]) if len(loss_history) > 0 else None,
         "final_loss": float(loss_history[-1]) if len(loss_history) > 0 else None,
         "hyperparams": model.get_params().tolist(),
+        "dtype": str(np_dtype),
     }
 
     # Cleanup C objects with output suppressed

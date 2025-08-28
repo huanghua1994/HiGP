@@ -27,10 +27,18 @@ def suppress_output():
         os.close(old_stderr_fd)
 
 class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood):
+    def __init__(self, train_x, train_y, likelihood, kernel_type="gaussian"):
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+
+        if kernel_type == "matern32":
+            base_kernel = gpytorch.kernels.MaternKernel(nu=1.5)
+        elif kernel_type == "matern52":
+            base_kernel = gpytorch.kernels.MaternKernel(nu=2.5)
+        else:
+            base_kernel = gpytorch.kernels.RBFKernel()
+
+        self.covar_module = gpytorch.kernels.ScaleKernel(base_kernel)
 
     def forward(self, x):
         mean_x = self.mean_module(x)
@@ -38,7 +46,9 @@ class ExactGPModel(gpytorch.models.ExactGP):
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-def run_gpytorch(train_x, train_y, test_x, test_y, params, seed=42):
+def run_gpytorch(
+    train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42
+):
     """Run GPyTorch on the given data
 
     Args:
@@ -47,33 +57,46 @@ def run_gpytorch(train_x, train_y, test_x, test_y, params, seed=42):
         test_x: Test features (M, D)
         test_y: Test targets (M,)
         params: Dictionary with GPyTorch parameters
+        dtype_str: Data type string ("float32" or "float64")
         seed: Random seed
 
     Returns:
         Dictionary with results
     """
+    
+    if dtype_str == "float64":
+        torch.set_default_dtype(torch.float64)
+        torch_dtype = torch.float64
+    else:
+        torch.set_default_dtype(torch.float32)
+        torch_dtype = torch.float32
+
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    train_x_torch = torch.from_numpy(train_x).float()
-    train_y_torch = torch.from_numpy(train_y).float()
-    test_x_torch = torch.from_numpy(test_x).float()
+    train_x_torch = torch.from_numpy(train_x).to(torch_dtype)
+    train_y_torch = torch.from_numpy(train_y).to(torch_dtype)
+    test_x_torch = torch.from_numpy(test_x).to(torch_dtype)
+
+    kernel_type = params.get("kernel", "gaussian").lower()
 
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x_torch, train_y_torch, likelihood)
+    model = ExactGPModel(train_x_torch, train_y_torch, likelihood, kernel_type)
 
     model.eval()
     likelihood.eval()
-    
+
     # Note: gpytorch uses relative tolerance 1e-02, and total number of iterations is default to 1000
     # we won't run to 1000 iterations, see https://docs.gpytorch.ai/en/stable/settings.html#:~:text=class%20gpytorch.settings.eval_cg_tolerance(value)
     # this is the most reasonable setting for comparison with HiGP
     with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
-        params.get("pred_cg_niter", params.get("cg_iters", 50))
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
-        params.get("pred_cg_niter", params.get("cg_iters", 50))
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_preconditioner_size(
-        params.get("pred_max_preconditioner_size", params.get("max_preconditioner_size", 100))
+        params.get(
+            "pred_max_preconditioner_size", params.get("max_preconditioner_size", 100)
+        )
     ):
         init_predictions = likelihood(model(test_x_torch))
         init_y_pred = init_predictions.mean.numpy()
@@ -98,7 +121,9 @@ def run_gpytorch(train_x, train_y, test_x, test_y, params, seed=42):
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
         params.get("train_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_preconditioner_size(
-        params.get("train_max_preconditioner_size", params.get("max_preconditioner_size", 10))
+        params.get(
+            "train_max_preconditioner_size", params.get("max_preconditioner_size", 10)
+        )
     ):
 
         with torch.no_grad():
@@ -128,7 +153,9 @@ def run_gpytorch(train_x, train_y, test_x, test_y, params, seed=42):
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
         params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_preconditioner_size(
-        params.get("pred_max_preconditioner_size", params.get("max_preconditioner_size", 100))
+        params.get(
+            "pred_max_preconditioner_size", params.get("max_preconditioner_size", 100)
+        )
     ):
         predictions = likelihood(model(test_x_torch))
         y_pred = predictions.mean.numpy()
@@ -136,6 +163,21 @@ def run_gpytorch(train_x, train_y, test_x, test_y, params, seed=42):
         y_std = np.sqrt(y_var)
 
     t_pred_end = time.perf_counter()
+
+    # Verify dtype precision matches expected configuration
+    expected_dtype = np.float64 if torch_dtype == torch.float64 else np.float32
+    assert (
+        y_pred.dtype == expected_dtype
+    ), f"GPyTorch prediction mean dtype {y_pred.dtype} does not match expected {expected_dtype}"
+    assert (
+        y_std.dtype == expected_dtype
+    ), f"GPyTorch prediction stddev dtype {y_std.dtype} does not match expected {expected_dtype}"
+    assert (
+        init_y_pred.dtype == expected_dtype
+    ), f"GPyTorch initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
+    assert (
+        init_y_std.dtype == expected_dtype
+    ), f"GPyTorch initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
 
     hyperparams = [
         model.likelihood.noise.item(),

@@ -55,7 +55,7 @@ def generate_training_data(
         n_test: Number of test samples
         dim: Dimension of input space
         bounds: Function bounds
-        noise_level: Noise standard deviation
+        noise_level: Relative noise level as fraction of data std (e.g., 0.01 = 1% noise)
         seed: Random seed
 
     Returns:
@@ -75,5 +75,8 @@ def generate_training_data(
     test_x = latin_hypercube_sampling(n_test, dim, bounds, seed=test_seed)
     test_y = func(test_x)
     if noise_level > 0:
-        train_y = add_noise(train_y, noise_level, seed=noise_seed)
+        # Convert relative noise level to absolute noise based on data std
+        data_std = train_y.std()
+        absolute_noise_std = noise_level * data_std
+        train_y = add_noise(train_y, absolute_noise_std, seed=noise_seed)
     return train_x, train_y, test_x, test_y

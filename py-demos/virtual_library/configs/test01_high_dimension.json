@@ -1,8 +1,7 @@
 {
   "name": "test01",
   "functions": [
-    "rosenbrock",
-    "rastrigin"
+    "rosenbrock"
   ],
   "dimensions": [
     5
@@ -17,6 +16,7 @@
     0.01
   ],
   "n_repeats": 1,
+  "kernel": "gaussian",
   "higp_params": {
     "maxits": 10,
     "lr": 0.01,
@@ -24,12 +24,11 @@
     "train_afn_rank": 10,
     "train_afn_lfil": 0,
     "pred_cg_niter": 50,
+    "pred_cg_tol": 0.01,
     "pred_afn_rank": 100,
     "pred_afn_lfil": 0,
     "mvtype": 0,
-    "train_cg_nvec": 10,
-    "train_max_preconditioner_size": 10,
-    "pred_max_preconditioner_size": 100
+    "train_cg_nvec": 10
   },
   "gpytorch_params": {
     "maxits": 10,
@@ -39,5 +38,6 @@
     "train_cg_niter": 20,
     "pred_cg_niter": 50
   },
+  "dtype": "float32",
   "seed": 42
 }
