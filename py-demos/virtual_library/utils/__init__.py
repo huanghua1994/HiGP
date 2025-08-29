@@ -6,4 +6,4 @@ from .test_functions import (
 )
 from .data_generation import latin_hypercube_sampling, generate_training_data, add_noise
 from .metrics import compute_rmse, compute_r2, compute_nll
-from .data_processing import train_test_normalize, denormalize_predictions
+from .data_processing import train_test_normalize

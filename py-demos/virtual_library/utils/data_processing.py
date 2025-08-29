@@ -31,22 +31,3 @@ def train_test_normalize(
     train_y_norm = (train_y - mean_y) / std_y
     test_y_norm = (test_y - mean_y) / std_y
     return train_x_norm, train_y_norm, test_x_norm, test_y_norm
-
-
-def denormalize_predictions(
-    y_pred: np.ndarray, y_std: np.ndarray, y_mean: float, y_scale: float
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Denormalize predictions back to original scale.
-
-    Args:
-        y_pred: Normalized predictions
-        y_std: Normalized prediction standard deviations
-        y_mean: Original training label mean
-        y_scale: Original training label standard deviation
-
-    Returns:
-        Denormalized predictions and standard deviations
-    """
-    y_pred_denorm = y_pred * y_scale + y_mean
-    y_std_denorm = y_std * y_scale
-    return y_pred_denorm, y_std_denorm
