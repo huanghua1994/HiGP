@@ -4,6 +4,7 @@ import sys
 import json
 import argparse
 import time
+import numpy as np
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -45,7 +46,6 @@ def run_single_experiment(
         )
         return None
 
-    # Data generation
     func = func_info["func"]
     bounds = func_info["bounds"]
     data_seed = seed + repeat_id * 1000
@@ -53,7 +53,6 @@ def run_single_experiment(
         func, n_train, n_test, dim, bounds, noise_level=noise_level, seed=data_seed
     )
 
-    # Apply Z-score normalization
     print(
         f"  Before normalization - Y range: [{train_y.min():.2f}, {train_y.max():.2f}], mean: {train_y.mean():.2f}"
     )
@@ -64,7 +63,6 @@ def run_single_experiment(
         f"  After normalization - Y range: [{train_y.min():.2f}, {train_y.max():.2f}], mean: {train_y.mean():.2f}"
     )
 
-    # Run HiGP
     print(f"  Running HiGP...")
     higp_params_with_kernel = {**higp_params, "kernel": kernel}
     higp_results = run_higp(
@@ -85,7 +83,6 @@ def run_single_experiment(
     higp_r2 = compute_r2(test_y, higp_results["y_pred"])
     higp_nll = compute_nll(test_y, higp_results["y_pred"], higp_results["y_std"])
 
-    # Run GPyTorch (if not skipped)
     if not skip_gpytorch:
         print(f"  Running GPyTorch...")
         gpytorch_params_with_kernel = {**gpytorch_params, "kernel": kernel}
@@ -117,7 +114,6 @@ def run_single_experiment(
         gpytorch_r2 = None
         gpytorch_nll = None
 
-    # Save results
     result = {
         "function": func_name,
         "dim": dim,
@@ -136,6 +132,7 @@ def run_single_experiment(
             "inference_time": higp_results["inference_time"],
             "init_loss": higp_results["init_loss"],
             "final_loss": higp_results["final_loss"],
+            "actual_config": higp_results.get("actual_config", {}),
         },
     }
 
@@ -151,9 +148,9 @@ def run_single_experiment(
             "inference_time": gpytorch_results["inference_time"],
             "init_loss": gpytorch_results["init_loss"],
             "final_loss": gpytorch_results["final_loss"],
+            "cg_warning": gpytorch_results.get("cg_warning", False),
         }
 
-    # Prepare detailed results with all data
     detailed_result = result.copy()
     detailed_result["higp"]["loss_history"] = higp_results["loss_history"]
     detailed_result["higp"]["y_pred"] = higp_results["y_pred"].tolist()
@@ -176,7 +173,6 @@ def run_single_experiment(
 
     detailed_result["test_y"] = test_y.tolist()
 
-    # Summary result should only contain core metrics
     summary_result = {
         "function": func_name,
         "dim": dim,
@@ -195,6 +191,7 @@ def run_single_experiment(
             "inference_time": higp_results["inference_time"],
             "init_loss": higp_results["init_loss"],
             "final_loss": higp_results["final_loss"],
+            "actual_config": higp_results.get("actual_config", {}),
         },
     }
 
@@ -230,20 +227,16 @@ def main():
     )
     args = parser.parse_args()
 
-    # Load configuration
     with open(args.config, "r") as f:
         config = json.load(f)
 
-    # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     exp_name = config.get("name", "experiment")
 
-    # Results storage
     all_results = []
     all_detailed = []
 
-    # Get configurations
     functions = config["functions"]
     dimensions = config["dimensions"]
     n_train_configs = config["n_train_configs"]
@@ -257,7 +250,6 @@ def main():
     kernel = config.get("kernel", "gaussian")
     dtype_str = config.get("dtype", "float32")
 
-    # Count total experiments
     total_exps = 0
     for func in functions:
         for dim in dimensions:
@@ -283,11 +275,9 @@ def main():
         print("Mode: Comparing HiGP and GPyTorch")
     print()
 
-    # Run experiments
     exp_count = 0
     for func in functions:
         for dim in dimensions:
-            # Check if dimension is valid for this function
             func_info = get_function_info(func)
             if not func_info:
                 continue
@@ -297,7 +287,6 @@ def main():
             ):
                 continue
 
-            # Get training sizes for this dimension
             dim_key = str(dim)
             if dim_key not in n_train_configs:
                 print(f"Warning: No training config for dimension {dim}")
@@ -332,7 +321,6 @@ def main():
 
                         print()
 
-    # Save results
     summary_path = os.path.join(args.output_dir, f"{exp_name}_summary_{timestamp}.json")
     detailed_path = os.path.join(
         args.output_dir, f"{exp_name}_detailed_{timestamp}.json"
@@ -348,16 +336,15 @@ def main():
     print(f"  Summary: {summary_path}")
     print(f"  Detailed: {detailed_path}")
 
-    # Print summary statistics
-    print("\n=== Summary Statistics ===")
+    print("\n" + "=" * 60)
+    print("SUMMARY STATISTICS")
+    print("=" * 60)
+
     for func in functions:
         func_results = [r for r in all_results if r["function"] == func]
         if not func_results:
             continue
 
-        print(f"\n{func}:")
-
-        # Average across repeats for each configuration
         configs = {}
         for r in func_results:
             key = (r["dim"], r["n_train"], r["noise_level"])
@@ -366,35 +353,60 @@ def main():
             configs[key].append(r)
 
         for (dim, n_train, noise), config_results in sorted(configs.items()):
-            higp_init_rmse = sum(r["higp"]["init_rmse"] for r in config_results) / len(
-                config_results
-            )
-            higp_rmse = sum(r["higp"]["rmse"] for r in config_results) / len(
-                config_results
-            )
-            higp_time = sum(r["higp"]["training_time"] for r in config_results) / len(
-                config_results
-            )
+            print(f"\n{func} (dim={dim}, n_train={n_train}, noise={noise}):")
 
-            print(f"  dim={dim}, n_train={n_train}, noise={noise}:")
+            higp_init_rmses = [r["higp"]["init_rmse"] for r in config_results]
+            higp_rmses = [r["higp"]["rmse"] for r in config_results]
+            higp_times = [r["higp"]["training_time"] for r in config_results]
+
+            print(f"  HiGP:")
             print(
-                f"    HiGP:     Init RMSE={higp_init_rmse:.4f}, Final RMSE={higp_rmse:.4f}, Time={higp_time:.3f}s"
+                f"    Initial RMSE: {np.mean(higp_init_rmses):.6f} ± {np.std(higp_init_rmses):.6f}"
+            )
+            print(
+                f"    Final RMSE: {np.mean(higp_rmses):.6f} ± {np.std(higp_rmses):.6f}"
+            )
+            print(
+                f"    Training time: {np.mean(higp_times):.2f}s ± {np.std(higp_times):.2f}s"
             )
 
-            # Only print GPyTorch results if they exist
             if "gpytorch" in config_results[0]:
-                gpytorch_init_rmse = sum(
+                gpytorch_init_rmses = [
                     r["gpytorch"]["init_rmse"] for r in config_results
-                ) / len(config_results)
-                gpytorch_rmse = sum(
-                    r["gpytorch"]["rmse"] for r in config_results
-                ) / len(config_results)
-                gpytorch_time = sum(
+                ]
+                gpytorch_rmses = [r["gpytorch"]["rmse"] for r in config_results]
+                gpytorch_times = [
                     r["gpytorch"]["training_time"] for r in config_results
-                ) / len(config_results)
+                ]
+
+                print(f"  GPyTorch:")
                 print(
-                    f"    GPyTorch: Init RMSE={gpytorch_init_rmse:.4f}, Final RMSE={gpytorch_rmse:.4f}, Time={gpytorch_time:.3f}s"
+                    f"    Initial RMSE: {np.mean(gpytorch_init_rmses):.6f} ± {np.std(gpytorch_init_rmses):.6f}"
                 )
+                print(
+                    f"    Final RMSE: {np.mean(gpytorch_rmses):.6f} ± {np.std(gpytorch_rmses):.6f}"
+                )
+                print(
+                    f"    Training time: {np.mean(gpytorch_times):.2f}s ± {np.std(gpytorch_times):.2f}s"
+                )
+
+    if all_results:
+        for r in all_results:
+            if "higp" in r and "actual_config" in r["higp"]:
+                actual_config = r["higp"]["actual_config"]
+                if actual_config:
+                    print("\nActual Configuration Used:")
+                    if "dtype" in actual_config:
+                        print(f"  Data type: {actual_config['dtype']}")
+                    if "kernel" in actual_config:
+                        print(f"  Kernel: {actual_config['kernel']}")
+                    if "matrix_form" in actual_config:
+                        print(f"  Matrix form: {actual_config['matrix_form']}")
+                    break
+
+    if any(r.get("gpytorch", {}).get("cg_warning", False) for r in all_results):
+        print("\nNote: CG convergence warnings detected during GPyTorch training.")
+        print("      Consider increasing train_cg_niter if accuracy is affected.")
 
 
 if __name__ == "__main__":

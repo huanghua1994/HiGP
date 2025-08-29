@@ -5,27 +5,97 @@ import higp
 import os
 import sys
 import gc
+import ctypes
+import tempfile
+import stat
 from contextlib import contextmanager
+
 
 @contextmanager
 def suppress_output():
+    """Context manager to suppress stdout/stderr from C extensions."""
+    try:
+        libc = ctypes.CDLL(None)
+        libc.fflush(None)
+    except (OSError, AttributeError):
+        pass
+
     old_stdout_fd = os.dup(1)
     old_stderr_fd = os.dup(2)
     try:
         sys.stdout.flush()
         sys.stderr.flush()
+
         devnull_fd = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull_fd, 1)
         os.dup2(devnull_fd, 2)
         os.close(devnull_fd)
         yield
     finally:
-        sys.stdout.flush()
-        sys.stderr.flush()
+        try:
+            libc = ctypes.CDLL(None)
+            libc.fflush(None)
+        except (OSError, AttributeError):
+            pass
+
         os.dup2(old_stdout_fd, 1)
         os.dup2(old_stderr_fd, 2)
         os.close(old_stdout_fd)
         os.close(old_stderr_fd)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+
+@contextmanager
+def capture_output():
+    """Capture stdout/stderr and return the text."""
+    try:
+        libc = ctypes.CDLL(None)
+        libc.fflush(None)
+    except (OSError, AttributeError):
+        pass
+
+    old_stdout_fd = os.dup(1)
+    old_stderr_fd = os.dup(2)
+    tmp_fd = -1
+    tmp_filename = None
+
+    try:
+        tmp_fd, tmp_filename = tempfile.mkstemp(prefix="higp_capture_", suffix=".txt")
+        os.chmod(tmp_filename, stat.S_IRUSR | stat.S_IWUSR)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        os.dup2(tmp_fd, 1)
+        os.dup2(tmp_fd, 2)
+        os.close(tmp_fd)
+        tmp_fd = -1
+
+        yield tmp_filename
+
+    finally:
+        try:
+            libc = ctypes.CDLL(None)
+            libc.fflush(None)
+        except (OSError, AttributeError):
+            pass
+
+        os.dup2(old_stdout_fd, 1)
+        os.dup2(old_stderr_fd, 2)
+        os.close(old_stdout_fd)
+        os.close(old_stderr_fd)
+
+        if tmp_fd >= 0:
+            try:
+                os.close(tmp_fd)
+            except OSError:
+                pass
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
 
 def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42):
     """Run HiGP on the given data
@@ -54,7 +124,6 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    # Convert to HiGP format: (D, N)
     train_x_higp = np.ascontiguousarray(train_x.T).astype(np_dtype)
     train_y_higp = np.ascontiguousarray(train_y).astype(np_dtype)
     test_x_higp = np.ascontiguousarray(test_x.T).astype(np_dtype)
@@ -68,21 +137,26 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
         params.get("kernel", "gaussian").lower(), higp.GaussianKernel
     )
 
-    with suppress_output():
+    actual_config = {
+        "dtype": "float32" if dtype_str == "float32" else "float64",
+        "kernel": params.get("kernel", "gaussian").lower(),
+    }
+
+    with capture_output() as tmp_file:
         gprproblem = higp.gprproblem.setup(
             data=train_x_higp,
             label=train_y_higp,
             kernel_type=kernel_type,
             mvtype=params.get("mvtype", 0),
             niter=params.get("train_cg_niter", params.get("cg_iters", 20)),
-            nvec=params.get("train_cg_nvec", 10),  # same as gpytorch
+            nvec=params.get("train_cg_nvec", 10),
             afn_rank=params.get("train_afn_rank", params.get("afn_rank", 10)),
             afn_lfil=params.get("train_afn_lfil", params.get("afn_lfil", 0)),
             seed=seed,
         )
 
-    model = higp.GPRModel(gprproblem, dtype=torch_dtype)
-    with suppress_output():
+        model = higp.GPRModel(gprproblem, dtype=torch_dtype)
+
         init_pred = higp.gpr_prediction(
             data_train=train_x_higp,
             label_train=train_y_higp,
@@ -95,8 +169,46 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
             afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 100)),
             afn_lfil=params.get("pred_afn_lfil", params.get("afn_lfil", 0)),
         )
-    init_y_pred = init_pred.prediction_mean
-    init_y_std = init_pred.prediction_stddev
+
+        init_y_pred = init_pred.prediction_mean
+        init_y_std = init_pred.prediction_stddev
+
+    try:
+        with open(tmp_file, "r") as f:
+            output_lines = f.readlines()
+        os.unlink(tmp_file)
+
+        for line in output_lines:
+            line = line.strip()
+            if "Data type:" in line:
+                if "float64" in line or "double" in line:
+                    actual_config["dtype"] = "float64"
+                else:
+                    actual_config["dtype"] = "float32"
+            elif "Kernel type:" in line:
+                if "Gaussian" in line:
+                    actual_config["kernel"] = "gaussian"
+                elif "Matern32" in line or "Matern 3/2" in line:
+                    actual_config["kernel"] = "matern32"
+                elif "Matern52" in line or "Matern 5/2" in line:
+                    actual_config["kernel"] = "matern52"
+            elif "kernel matrix form:" in line:
+                if "dense" in line:
+                    actual_config["matrix_form"] = "dense/on-the-fly"
+                elif "h2" in line or "H2" in line:
+                    actual_config["matrix_form"] = "H2"
+            elif "AFN preconditioner parameters:" in line:
+                import re
+
+                rank_match = re.search(r"rank\s+(\d+)", line)
+                lfil_match = re.search(r"lfil\s+(\d+)", line)
+                if rank_match:
+                    actual_config["afn_rank"] = int(rank_match.group(1))
+                if lfil_match:
+                    actual_config["afn_lfil"] = int(lfil_match.group(1))
+    except (OSError, IOError, ValueError):
+        pass
+
     optimizer = torch.optim.Adam(model.parameters(), lr=params.get("lr", 0.01))
 
     t_train_start = time.perf_counter()
@@ -104,11 +216,9 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
         loss_history, _ = higp.gpr_torch_minimize(
             model, optimizer, maxits=params.get("maxits", 50), print_info=False
         )
-
     t_train_end = time.perf_counter()
 
     t_pred_start = time.perf_counter()
-
     with suppress_output():
         pred = higp.gpr_prediction(
             data_train=train_x_higp,
@@ -125,7 +235,6 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
 
     t_pred_end = time.perf_counter()
 
-    # Verify dtype precision matches expected configuration
     expected_dtype = np_dtype
     assert (
         pred.prediction_mean.dtype == expected_dtype
@@ -152,12 +261,12 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
         "final_loss": float(loss_history[-1]) if len(loss_history) > 0 else None,
         "hyperparams": model.get_params().tolist(),
         "dtype": str(np_dtype),
+        "actual_config": actual_config,
     }
 
-    # Cleanup C objects with output suppressed
     with suppress_output():
         del gprproblem
         del model
-        gc.collect()  # Ensures C destructors run while output is suppressed
+        gc.collect()
 
     return results

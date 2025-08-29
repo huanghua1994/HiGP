@@ -1,10 +1,12 @@
 import time
+import warnings
 import numpy as np
 import torch
 import gpytorch
 import os
 import sys
 from contextlib import contextmanager
+
 
 @contextmanager
 def suppress_output():
@@ -25,6 +27,7 @@ def suppress_output():
         os.dup2(old_stderr_fd, 2)
         os.close(old_stdout_fd)
         os.close(old_stderr_fd)
+
 
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, kernel_type="gaussian"):
@@ -63,7 +66,7 @@ def run_gpytorch(
     Returns:
         Dictionary with results
     """
-    
+
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         torch_dtype = torch.float64
@@ -110,34 +113,48 @@ def run_gpytorch(
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
     loss_history = []
+    cg_warning_occurred = False
 
     t_train_start = time.perf_counter()
 
     # Note: gpytorch uses relative tolerance 1, and total number of iterations is default to 1000
     # we won't run to 1000 iterations, see https://docs.gpytorch.ai/en/stable/settings.html#:~:text=class%20gpytorch.settings.cg_tolerance(value)
     # this is the most reasonable setting for comparison with HiGP
-    with suppress_output(), gpytorch.settings.max_cg_iterations(
-        params.get("train_cg_niter", params.get("cg_iters", 1000))
-    ), gpytorch.settings.max_lanczos_quadrature_iterations(
-        params.get("train_cg_niter", params.get("cg_iters", 1000))
-    ), gpytorch.settings.max_preconditioner_size(
-        params.get(
-            "train_max_preconditioner_size", params.get("max_preconditioner_size", 10)
+    with suppress_output(), warnings.catch_warnings(record=True) as w:
+        # Filter to only catch NumericalWarning from linear_operator
+        warnings.filterwarnings(
+            "always", category=UserWarning, module="linear_operator"
         )
-    ):
 
-        with torch.no_grad():
-            output0 = model(train_x_torch)
-            init_loss = -mll(output0, train_y_torch).item()
-            loss_history.append(init_loss)
+        with gpytorch.settings.max_cg_iterations(
+            params.get("train_cg_niter", params.get("cg_iters", 1000))
+        ), gpytorch.settings.max_lanczos_quadrature_iterations(
+            params.get("train_cg_niter", params.get("cg_iters", 1000))
+        ), gpytorch.settings.max_preconditioner_size(
+            params.get(
+                "train_max_preconditioner_size",
+                params.get("max_preconditioner_size", 10),
+            )
+        ):
 
-        for i in range(params.get("maxits", 50)):
-            optimizer.zero_grad()
-            output = model(train_x_torch)
-            loss = -mll(output, train_y_torch)
-            loss.backward()
-            loss_history.append(loss.item())
-            optimizer.step()
+            with torch.no_grad():
+                output0 = model(train_x_torch)
+                init_loss = -mll(output0, train_y_torch).item()
+                loss_history.append(init_loss)
+
+            for i in range(params.get("maxits", 50)):
+                optimizer.zero_grad()
+                output = model(train_x_torch)
+                loss = -mll(output, train_y_torch)
+                loss.backward()
+                loss_history.append(loss.item())
+                optimizer.step()
+
+        if w:
+            for warning in w:
+                if "CG terminated" in str(warning.message):
+                    cg_warning_occurred = True
+                    break
 
     t_train_end = time.perf_counter()
 
@@ -197,6 +214,7 @@ def run_gpytorch(
         "init_loss": loss_history[0] if len(loss_history) > 0 else None,
         "final_loss": loss_history[-1] if len(loss_history) > 0 else None,
         "hyperparams": hyperparams,
+        "cg_warning": cg_warning_occurred,
     }
 
     return results
