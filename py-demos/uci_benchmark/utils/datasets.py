@@ -1,12 +1,11 @@
 """UCI Dataset loading and caching utilities."""
 
-import os
 import zipfile
 import requests
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional
 from abc import ABC, abstractmethod
 
 
@@ -19,39 +18,30 @@ class UCIDataset(ABC):
 
     @abstractmethod
     def download(self) -> None:
-        """Download dataset if not cached."""
         pass
 
     @abstractmethod
     def load(self) -> Tuple[np.ndarray, np.ndarray]:
-        """Load and return the full dataset."""
         pass
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Dataset name."""
         pass
 
     @property
     @abstractmethod
     def url(self) -> str:
-        """Download URL."""
         pass
 
 
 class BikeDataset(UCIDataset):
-    """Bike Sharing dataset from UCI.
-
-    Features: 15
-    Samples: ~17,000 hourly records
-    """
+    """Bike Sharing dataset from UCI (15 features, ~17k samples)."""
 
     name = "bike"
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00275/Bike-Sharing-Dataset.zip"
 
     def download(self) -> None:
-        """Download and extract Bike dataset."""
         dataset_path = self.cache_dir / "bike"
         dataset_path.mkdir(exist_ok=True)
 
@@ -72,15 +62,8 @@ class BikeDataset(UCIDataset):
             zip_ref.extractall(dataset_path)
 
         zip_path.unlink()
-        print("Bike dataset downloaded successfully.")
 
     def load(self) -> Tuple[np.ndarray, np.ndarray]:
-        """Load Bike dataset.
-
-        Returns:
-            X: Features array (N, 15)
-            y: Target array (N,)
-        """
         self.download()
 
         dataset_path = self.cache_dir / "bike"
@@ -99,17 +82,12 @@ class BikeDataset(UCIDataset):
 
 
 class Road3DDataset(UCIDataset):
-    """3D Road Network dataset from UCI.
-
-    Features: 2
-    Samples: ~434,874 GPS points
-    """
+    """3D Road Network dataset from UCI (2 features, ~435k GPS points)."""
 
     name = "road3d"
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00246/3D_spatial_network.txt"
 
     def download(self) -> None:
-        """Download Road3D dataset."""
         dataset_path = self.cache_dir / "road3d"
         dataset_path.mkdir(exist_ok=True)
 
@@ -125,15 +103,7 @@ class Road3DDataset(UCIDataset):
         with open(data_file, "wb") as f:
             f.write(response.content)
 
-        print("Road3D dataset downloaded successfully.")
-
     def load(self) -> Tuple[np.ndarray, np.ndarray]:
-        """Load Road3D dataset.
-
-        Returns:
-            X: Features array (N, 2) - longitude and latitude
-            y: Target array (N,) - elevation
-        """
         self.download()
 
         dataset_path = self.cache_dir / "road3d"
@@ -156,22 +126,7 @@ def load_uci_dataset(
     seed: int = 42,
     cache_dir: str = "~/.higp_cache/datasets",
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Load and split a UCI dataset.
-
-    Args:
-        dataset_name: Name of dataset ('bike' or 'road3d')
-        n_train: Number of training samples (None for default split)
-        n_test: Number of test samples (None for default split)
-        train_ratio: Train/test split ratio if n_train/n_test not specified
-        seed: Random seed for reproducible splits
-        cache_dir: Directory for caching downloaded datasets
-
-    Returns:
-        train_x: Training features (n_train, n_features)
-        train_y: Training labels (n_train,)
-        test_x: Test features (n_test, n_features)
-        test_y: Test labels (n_test,)
-    """
+    """Load and split a UCI dataset with configurable train/test sizes."""
     if dataset_name.lower() == "bike":
         dataset = BikeDataset(cache_dir)
     elif dataset_name.lower() == "road3d":

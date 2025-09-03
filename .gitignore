@@ -42,3 +42,13 @@ py-interface/*.egg-info/*
 
 py-demos/.ipynb_checkpoints/*
 py-demos/tmp/*
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Test results and outputs
+py-demos/uci_benchmark/results/
+py-demos/virtual_library/results/

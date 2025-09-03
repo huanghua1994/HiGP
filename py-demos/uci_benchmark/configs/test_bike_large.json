@@ -1,23 +1,16 @@
 {
-  "name": "all_datasets",
+  "name": "bike_large",
   "datasets": [
-    "bike",
-    "road3d"
+    "bike"
   ],
-  "n_train_configs": {
-    "bike": [
-      15000
-    ],
-    "road3d": [
-      100000
-    ]
-  },
+  "n_train": 15000,
   "n_test": 200,
   "n_repeats": 3,
   "kernel": "gaussian",
   "higp_params": {
     "maxits": 50,
     "lr": 0.01,
+    "mvtype": 1,
     "afn_rank": 10,
     "afn_lfil": 0,
     "train_cg_niter": 20,

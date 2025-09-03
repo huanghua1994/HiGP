@@ -2,99 +2,8 @@ import time
 import numpy as np
 import torch
 import higp
-import os
-import sys
 import gc
-import ctypes
-import tempfile
-import stat
-from contextlib import contextmanager
-
-
-@contextmanager
-def suppress_output():
-    """Context manager to suppress stdout/stderr from C extensions."""
-    try:
-        libc = ctypes.CDLL(None)
-        libc.fflush(None)
-    except (OSError, AttributeError):
-        pass
-
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    try:
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        devnull_fd = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull_fd, 1)
-        os.dup2(devnull_fd, 2)
-        os.close(devnull_fd)
-        yield
-    finally:
-        try:
-            libc = ctypes.CDLL(None)
-            libc.fflush(None)
-        except (OSError, AttributeError):
-            pass
-
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-
-@contextmanager
-def capture_output():
-    """Capture stdout/stderr and return the text."""
-    try:
-        libc = ctypes.CDLL(None)
-        libc.fflush(None)
-    except (OSError, AttributeError):
-        pass
-
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    tmp_fd = -1
-    tmp_filename = None
-
-    try:
-        tmp_fd, tmp_filename = tempfile.mkstemp(prefix="higp_capture_", suffix=".txt")
-        os.chmod(tmp_filename, stat.S_IRUSR | stat.S_IWUSR)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        os.dup2(tmp_fd, 1)
-        os.dup2(tmp_fd, 2)
-        os.close(tmp_fd)
-        tmp_fd = -1
-
-        yield tmp_filename
-
-    finally:
-        try:
-            libc = ctypes.CDLL(None)
-            libc.fflush(None)
-        except (OSError, AttributeError):
-            pass
-
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
-
-        if tmp_fd >= 0:
-            try:
-                os.close(tmp_fd)
-            except OSError:
-                pass
-
-        sys.stdout.flush()
-        sys.stderr.flush()
+from ..utils import suppress_output, capture_output, prepare_for_higp
 
 
 def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42):
@@ -124,9 +33,8 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    train_x_higp = np.ascontiguousarray(train_x.T).astype(np_dtype)
-    train_y_higp = np.ascontiguousarray(train_y).astype(np_dtype)
-    test_x_higp = np.ascontiguousarray(test_x.T).astype(np_dtype)
+    train_x_higp, train_y_higp = prepare_for_higp(train_x, train_y, np_dtype)
+    test_x_higp, _ = prepare_for_higp(test_x, np.array([]), np_dtype)
 
     kernel_map = {
         "gaussian": higp.GaussianKernel,

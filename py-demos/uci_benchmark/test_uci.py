@@ -64,7 +64,6 @@ def run_single_experiment(
         test_x_higp,
         test_y_higp,
         higp_params_with_kernel,
-        dataset_name=dataset_name,
         dtype_str=dtype_str,
         seed=seed,
     )
@@ -93,7 +92,6 @@ def run_single_experiment(
             test_x_higp,
             test_y_higp,
             gpytorch_params_with_kernel,
-            dataset_name=dataset_name,
             dtype_str=dtype_str,
             seed=seed,
         )
@@ -161,6 +159,38 @@ def run_single_experiment(
             "cg_warning": gpytorch_results.get("cg_warning", False),
         }
 
+    summary_result = {
+        "dataset": dataset_name,
+        "n_train": n_train,
+        "n_test": n_test,
+        "n_features": train_x.shape[1],
+        "kernel": kernel,
+        "repeat_id": repeat_id,
+        "higp": {
+            "init_rmse": float(higp_init_rmse),
+            "init_r2": float(higp_init_r2),
+            "init_nll": float(higp_init_nll),
+            "rmse": float(higp_rmse),
+            "r2": float(higp_r2),
+            "nll": float(higp_nll),
+            "training_time": higp_results["training_time"],
+            "inference_time": higp_results["inference_time"],
+        },
+    }
+
+    if not skip_gpytorch:
+        summary_result["gpytorch"] = {
+            "init_rmse": float(gpytorch_init_rmse),
+            "init_r2": float(gpytorch_init_r2),
+            "init_nll": float(gpytorch_init_nll),
+            "rmse": float(gpytorch_rmse),
+            "r2": float(gpytorch_r2),
+            "nll": float(gpytorch_nll),
+            "training_time": gpytorch_results["training_time"],
+            "inference_time": gpytorch_results["inference_time"],
+            "cg_warning": gpytorch_results.get("cg_warning", False),
+        }
+
     detailed = result.copy()
     detailed["higp"]["y_pred"] = higp_results["y_pred"].tolist()
     detailed["higp"]["y_std"] = higp_results["y_std"].tolist()
@@ -178,7 +208,7 @@ def run_single_experiment(
         detailed["gpytorch"]["loss_history"] = gpytorch_results["loss_history"]
         detailed["gpytorch"]["hyperparams"] = gpytorch_results["hyperparams"]
 
-    return result, detailed
+    return summary_result, detailed
 
 
 def main():
@@ -320,8 +350,8 @@ def main():
                     break
 
     if any(r.get("gpytorch", {}).get("cg_warning", False) for r in all_results):
-        print("\nNote: CG convergence warnings detected during GPyTorch training.")
-        print("      Consider increasing train_cg_niter if accuracy is affected.")
+        print("\nCG convergence warnings detected during GPyTorch training.")
+        print("Consider increasing train_cg_niter if accuracy is affected.")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     config_name = config.get("name", "uci_benchmark")

@@ -1,9 +1,9 @@
 {
-  "name": "road3d_small",
+  "name": "road3d_large",
   "datasets": [
     "road3d"
   ],
-  "n_train": 30000,
+  "n_train": 150000,
   "n_test": 100,
   "n_repeats": 1,
   "kernel": "gaussian",

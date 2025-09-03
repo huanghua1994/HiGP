@@ -7,17 +7,7 @@ from typing import Tuple, Optional
 def train_test_normalize(
     train_x: np.ndarray, train_y: np.ndarray, test_x: np.ndarray, test_y: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Normalize train and test sets using training statistics (Z-score normalization).
-
-    Args:
-        train_x: Training features (N_train, D)
-        train_y: Training labels (N_train,)
-        test_x: Test features (N_test, D)
-        test_y: Test labels (N_test,)
-
-    Returns:
-        Normalized train_x, train_y, test_x, test_y using training set statistics
-    """
+    """Normalize train and test sets using training statistics."""
     mean_x = train_x.mean(axis=0, keepdims=True)
     std_x = train_x.std(axis=0, keepdims=True) + 1e-6
     train_x_norm = (train_x - mean_x) / std_x
@@ -34,24 +24,12 @@ def train_test_normalize(
 def prepare_for_higp(
     X: np.ndarray, y: np.ndarray, dtype: Optional[np.dtype] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Prepare data for HiGP format.
-
-    HiGP expects data in column-major format where each column is a data point.
-
-    Args:
-        X: Features array (N, D) in row-major format
-        y: Labels array (N,)
-        dtype: Data type to cast to (if None, keep original)
-
-    Returns:
-        X_higp: Features in HiGP format (D, N) - transposed and contiguous
-        y_higp: Labels in HiGP format (N,) - contiguous
-    """
+    """Prepare data for HiGP format (transpose X and make contiguous)."""
     if dtype is not None:
         X = X.astype(dtype)
         y = y.astype(dtype)
 
-    # Transpose features and ensure contiguous memory layout
+    # Transpose and make contiguous
     X_higp = np.ascontiguousarray(X.T)
     y_higp = np.ascontiguousarray(y)
 

@@ -3,30 +3,7 @@ import warnings
 import numpy as np
 import torch
 import gpytorch
-import os
-import sys
-from contextlib import contextmanager
-
-
-@contextmanager
-def suppress_output():
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    try:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        devnull_fd = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull_fd, 1)
-        os.dup2(devnull_fd, 2)
-        os.close(devnull_fd)
-        yield
-    finally:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
+from ..utils import suppress_output
 
 
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -89,9 +66,7 @@ def run_gpytorch(
     model.eval()
     likelihood.eval()
 
-    # Note: gpytorch uses relative tolerance 1e-02, and total number of iterations is default to 1000
-    # we won't run to 1000 iterations, see https://docs.gpytorch.ai/en/stable/settings.html#:~:text=class%20gpytorch.settings.eval_cg_tolerance(value)
-    # this is the most reasonable setting for comparison with HiGP
+    # Initial predictions with default GPyTorch CG settings
     with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
         params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
@@ -117,9 +92,7 @@ def run_gpytorch(
 
     t_train_start = time.perf_counter()
 
-    # Note: gpytorch uses relative tolerance 1, and total number of iterations is default to 1000
-    # we won't run to 1000 iterations, see https://docs.gpytorch.ai/en/stable/settings.html#:~:text=class%20gpytorch.settings.cg_tolerance(value)
-    # this is the most reasonable setting for comparison with HiGP
+    # Training with CG settings
     with suppress_output(), warnings.catch_warnings(record=True) as w:
         # Filter to only catch NumericalWarning from linear_operator
         warnings.filterwarnings(
@@ -162,9 +135,7 @@ def run_gpytorch(
     model.eval()
     likelihood.eval()
 
-    # Note: gpytorch uses relative tolerance 1e-02, and total number of iterations is default to 1000
-    # we won't run to 1000 iterations, see https://docs.gpytorch.ai/en/stable/settings.html#:~:text=class%20gpytorch.settings.eval_cg_tolerance(value)
-    # this is the most reasonable setting for comparison with HiGP
+    # Final predictions with trained model
     with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
         params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_lanczos_quadrature_iterations(

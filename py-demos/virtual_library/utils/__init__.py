@@ -6,4 +6,22 @@ from .test_functions import (
 )
 from .data_generation import latin_hypercube_sampling, generate_training_data, add_noise
 from .metrics import compute_rmse, compute_r2, compute_nll
-from .data_processing import train_test_normalize
+from .data_processing import train_test_normalize, prepare_for_higp
+from .common import suppress_output, capture_output
+
+__all__ = [
+    "rosenbrock",
+    "rastrigin",
+    "branin",
+    "get_function_info",
+    "latin_hypercube_sampling",
+    "generate_training_data",
+    "add_noise",
+    "compute_rmse",
+    "compute_r2",
+    "compute_nll",
+    "train_test_normalize",
+    "prepare_for_higp",
+    "suppress_output",
+    "capture_output",
+]

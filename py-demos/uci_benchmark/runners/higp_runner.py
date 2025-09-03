@@ -10,48 +10,13 @@ import stat
 from contextlib import contextmanager
 import numpy as np
 import torch
+from ..utils import suppress_output
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import higp
-
-
-@contextmanager
-def suppress_output():
-    """Context manager to suppress stdout/stderr from C extensions."""
-    try:
-        libc = ctypes.CDLL(None)
-        libc.fflush(None)
-    except (OSError, AttributeError):
-        pass
-
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    try:
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        devnull_fd = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull_fd, 1)
-        os.dup2(devnull_fd, 2)
-        os.close(devnull_fd)
-        yield
-    finally:
-        try:
-            libc = ctypes.CDLL(None)
-            libc.fflush(None)
-        except (OSError, AttributeError):
-            pass
-
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
 
 
 @contextmanager
@@ -110,25 +75,10 @@ def run_higp(
     test_x,
     test_y,
     params,
-    dataset_name=None,
     dtype_str="float32",
     seed=42,
 ):
-    """Run HiGP on UCI dataset.
-
-    Args:
-        train_x: Training features (D, N) in HiGP format
-        train_y: Training labels (N,)
-        test_x: Test features (D, N_test) in HiGP format
-        test_y: Test labels (N_test,)
-        params: Dictionary with HiGP parameters
-        dataset_name: Name of dataset for auto-configuration
-        dtype_str: Data type string ("float32" or "float64")
-        seed: Random seed
-
-    Returns:
-        Dictionary with results
-    """
+    """Run HiGP on UCI dataset."""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         np_dtype = np.float64

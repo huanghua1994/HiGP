@@ -405,8 +405,8 @@ def main():
                     break
 
     if any(r.get("gpytorch", {}).get("cg_warning", False) for r in all_results):
-        print("\nNote: CG convergence warnings detected during GPyTorch training.")
-        print("      Consider increasing train_cg_niter if accuracy is affected.")
+        print("\nCG convergence warnings detected during GPyTorch training.")
+        print("Consider increasing train_cg_niter if accuracy is affected.")
 
 
 if __name__ == "__main__":

@@ -2,34 +2,10 @@
 
 import time
 import warnings
-import os
-import sys
 import numpy as np
 import torch
 import gpytorch
-from contextlib import contextmanager
-
-
-@contextmanager
-def suppress_output():
-    """Context manager to suppress stdout/stderr from C extensions."""
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    try:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        devnull_fd = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull_fd, 1)
-        os.dup2(devnull_fd, 2)
-        os.close(devnull_fd)
-        yield
-    finally:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
+from ..utils import suppress_output
 
 
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -60,25 +36,10 @@ def run_gpytorch(
     test_x,
     test_y,
     params,
-    dataset_name=None,
     dtype_str="float32",
     seed=42,
 ):
-    """Run GPyTorch on UCI dataset.
-
-    Args:
-        train_x: Training features (D, N) in HiGP format
-        train_y: Training labels (N,)
-        test_x: Test features (D, N_test) in HiGP format
-        test_y: Test labels (N_test,)
-        params: Dictionary with GPyTorch parameters
-        dataset_name: Name of dataset for auto-configuration
-        dtype_str: Data type string ("float32" or "float64")
-        seed: Random seed
-
-    Returns:
-        Dictionary with results
-    """
+    """Run GPyTorch on UCI dataset."""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         torch_dtype = torch.float64
@@ -92,7 +53,6 @@ def run_gpytorch(
     train_x_gp = torch.tensor(train_x.T, dtype=torch_dtype)
     train_y_gp = torch.tensor(train_y, dtype=torch_dtype)
     test_x_gp = torch.tensor(test_x.T, dtype=torch_dtype)
-    test_y_gp = torch.tensor(test_y, dtype=torch_dtype)
 
     t_train_start = time.perf_counter()
 
@@ -149,7 +109,7 @@ def run_gpytorch(
                 init_loss = -mll(output0, train_y_gp).item()
                 loss_history.append(init_loss)
 
-            for i in range(params.get("maxits", 50)):
+            for _ in range(params.get("maxits", 50)):
                 optimizer.zero_grad()
                 output = model(train_x_gp)
                 loss = -mll(output, train_y_gp)
