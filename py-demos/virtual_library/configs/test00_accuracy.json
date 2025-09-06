@@ -1,5 +1,5 @@
 {
-  "name": "test00",
+  "name": "test00_accuracy",
   "functions": [
     "rosenbrock"
   ],
@@ -11,14 +11,14 @@
       3000
     ]
   },
-  "n_test": 100,
+  "n_test": 200,
   "noise_levels": [
     0.01
   ],
-  "n_repeats": 5,
-  "kernel": "gaussian",
+  "n_repeats": 3,
+  "kernel": "matern32",
   "higp_params": {
-    "maxits": 200,
+    "maxits": 500,
     "lr": 0.01,
     "train_cg_niter": 20,
     "train_afn_rank": 10,
@@ -31,7 +31,7 @@
     "train_cg_nvec": 10
   },
   "gpytorch_params": {
-    "maxits": 200,
+    "maxits": 500,
     "lr": 0.01,
     "train_max_preconditioner_size": 10,
     "pred_max_preconditioner_size": 100,

@@ -1,26 +1,20 @@
 {
-  "name": "test03",
+  "name": "test01_low_dimension",
   "functions": [
-    "rosenbrock",
-    "rastrigin",
     "branin"
   ],
   "dimensions": [
-    2,
-    20
+    2
   ],
   "n_train_configs": {
     "2": [
-      30000
-    ],
-    "20": [
-      30000
+      50000,
+      150000
     ]
   },
-  "n_test": 100,
+  "n_test": 200,
   "noise_levels": [
-    0.01,
-    0.1
+    0.01
   ],
   "n_repeats": 3,
   "kernel": "gaussian",

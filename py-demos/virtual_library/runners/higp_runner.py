@@ -3,24 +3,12 @@ import numpy as np
 import torch
 import higp
 import gc
+import os
 from ..utils import suppress_output, capture_output, prepare_for_higp
 
 
 def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42):
-    """Run HiGP on the given data
-
-    Args:
-        train_x: Training features (N, D)
-        train_y: Training targets (N,)
-        test_x: Test features (M, D)
-        test_y: Test targets (M,)
-        params: Dictionary with HiGP parameters
-        dtype_str: Data type string ("float32" or "float64")
-        seed: Random seed
-
-    Returns:
-        Dictionary with results
-    """
+    """Run HiGP on the given data"""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         np_dtype = np.float64
@@ -33,8 +21,8 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    train_x_higp, train_y_higp = prepare_for_higp(train_x, train_y, np_dtype)
-    test_x_higp, _ = prepare_for_higp(test_x, np.array([]), np_dtype)
+    train_x_higp, train_y_higp = prepare_for_higp(train_x, train_y, dtype=np_dtype)
+    test_x_higp, _ = prepare_for_higp(test_x, np.array([]), dtype=np_dtype)
 
     kernel_map = {
         "gaussian": higp.GaussianKernel,
@@ -56,10 +44,10 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
             label=train_y_higp,
             kernel_type=kernel_type,
             mvtype=params.get("mvtype", 0),
-            niter=params.get("train_cg_niter", params.get("cg_iters", 20)),
-            nvec=params.get("train_cg_nvec", 10),
             afn_rank=params.get("train_afn_rank", params.get("afn_rank", 10)),
             afn_lfil=params.get("train_afn_lfil", params.get("afn_lfil", 0)),
+            niter=params.get("train_cg_niter", params.get("cg_iters", 20)),
+            nvec=params.get("train_cg_nvec", 10),
             seed=seed,
         )
 
@@ -146,16 +134,14 @@ def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed
     expected_dtype = np_dtype
     assert (
         pred.prediction_mean.dtype == expected_dtype
-    ), f"HiGP prediction mean dtype {pred.prediction_mean.dtype} does not match expected {expected_dtype}"
+    ), f"{pred.prediction_mean.dtype} != {expected_dtype}"
     assert (
         pred.prediction_stddev.dtype == expected_dtype
-    ), f"HiGP prediction stddev dtype {pred.prediction_stddev.dtype} does not match expected {expected_dtype}"
+    ), f"{pred.prediction_stddev.dtype} != {expected_dtype}"
     assert (
         init_y_pred.dtype == expected_dtype
-    ), f"HiGP initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        init_y_std.dtype == expected_dtype
-    ), f"HiGP initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
+    ), f"{init_y_pred.dtype} != {expected_dtype}"
+    assert init_y_std.dtype == expected_dtype, f"{init_y_std.dtype} != {expected_dtype}"
 
     results = {
         "y_pred": pred.prediction_mean,

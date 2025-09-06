@@ -1,5 +1,3 @@
-"""GPyTorch runner for UCI benchmark."""
-
 import time
 import warnings
 import numpy as np
@@ -9,8 +7,6 @@ from ..utils import suppress_output
 
 
 class ExactGPModel(gpytorch.models.ExactGP):
-    """Standard ExactGP model for UCI datasets."""
-
     def __init__(self, train_x, train_y, likelihood, kernel_type="gaussian"):
         super().__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
@@ -31,15 +27,9 @@ class ExactGPModel(gpytorch.models.ExactGP):
 
 
 def run_gpytorch(
-    train_x,
-    train_y,
-    test_x,
-    test_y,
-    params,
-    dtype_str="float32",
-    seed=42,
+    train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42
 ):
-    """Run GPyTorch on UCI dataset."""
+    """Run GPyTorch on the given data"""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         torch_dtype = torch.float64
@@ -50,31 +40,31 @@ def run_gpytorch(
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    train_x_gp = torch.tensor(train_x.T, dtype=torch_dtype)
-    train_y_gp = torch.tensor(train_y, dtype=torch_dtype)
-    test_x_gp = torch.tensor(test_x.T, dtype=torch_dtype)
-
-    t_train_start = time.perf_counter()
+    train_x_torch = torch.from_numpy(train_x).to(torch_dtype)
+    train_y_torch = torch.from_numpy(train_y).to(torch_dtype)
+    test_x_torch = torch.from_numpy(test_x).to(torch_dtype)
 
     kernel_type = params.get("kernel", "gaussian").lower()
 
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x_gp, train_y_gp, likelihood, kernel_type)
+    model = ExactGPModel(train_x_torch, train_y_torch, likelihood, kernel_type)
 
     model.eval()
     likelihood.eval()
-    with torch.no_grad(), warnings.catch_warnings(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_preconditioner_size(
-        params.get("pred_max_preconditioner_size", 100)
-    ), gpytorch.settings.max_cg_iterations(
-        params.get("pred_cg_niter", 1000)
+    # Initial predictions with default GPyTorch CG settings
+    with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
-        params.get("pred_cg_niter", 1000)
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
+    ), gpytorch.settings.max_preconditioner_size(
+        params.get(
+            "pred_max_preconditioner_size", params.get("max_preconditioner_size", 100)
+        )
     ):
-        warnings.simplefilter("ignore")
-        init_output = model(test_x_gp)
-        init_preds = likelihood(init_output)
-        init_y_pred = init_preds.mean.numpy()
-        init_y_std = init_preds.stddev.numpy()
+        init_predictions = likelihood(model(test_x_torch))
+        init_y_pred = init_predictions.mean.numpy()
+        init_y_var = init_predictions.variance.numpy()
+        init_y_std = np.sqrt(init_y_var)
 
     model.train()
     likelihood.train()
@@ -83,39 +73,40 @@ def run_gpytorch(
 
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-    cg_iters = params.get("train_cg_niter", params.get("cg_iters", 1000))
-    max_preconditioner_size = params.get(
-        "train_max_preconditioner_size", params.get("max_preconditioner_size", 10)
-    )
-
     loss_history = []
     cg_warning_occurred = False
 
-    with warnings.catch_warnings(record=True) as w:
+    t_train_start = time.perf_counter()
+
+    with suppress_output(), warnings.catch_warnings(record=True) as w:
         warnings.filterwarnings(
             "always", category=UserWarning, module="linear_operator"
         )
 
-        with gpytorch.settings.max_preconditioner_size(
-            max_preconditioner_size
-        ), gpytorch.settings.max_cg_iterations(
-            cg_iters
+        # Training with CG settings
+        with gpytorch.settings.max_cg_iterations(
+            params.get("train_cg_niter", params.get("cg_iters", 1000))
         ), gpytorch.settings.max_lanczos_quadrature_iterations(
-            cg_iters
+            params.get("train_cg_niter", params.get("cg_iters", 1000))
+        ), gpytorch.settings.max_preconditioner_size(
+            params.get(
+                "train_max_preconditioner_size",
+                params.get("max_preconditioner_size", 10),
+            )
         ):
 
             with torch.no_grad():
-                output0 = model(train_x_gp)
-                init_loss = -mll(output0, train_y_gp).item()
+                output0 = model(train_x_torch)
+                init_loss = -mll(output0, train_y_torch).item()
                 loss_history.append(init_loss)
 
-            for _ in range(params.get("maxits", 50)):
+            for i in range(params.get("maxits", 50)):
                 optimizer.zero_grad()
-                output = model(train_x_gp)
-                loss = -mll(output, train_y_gp)
+                output = model(train_x_torch)
+                loss = -mll(output, train_y_torch)
                 loss.backward()
-                optimizer.step()
                 loss_history.append(loss.item())
+                optimizer.step()
 
         if w:
             for warning in w:
@@ -126,49 +117,40 @@ def run_gpytorch(
     t_train_end = time.perf_counter()
 
     t_pred_start = time.perf_counter()
-
     model.eval()
     likelihood.eval()
 
-    pred_cg_iters = params.get("pred_cg_niter", params.get("cg_iters", 1000))
-    pred_preconditioner_size = params.get(
-        "pred_max_preconditioner_size", params.get("max_preconditioner_size", 100)
-    )
-
-    with torch.no_grad(), warnings.catch_warnings(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_preconditioner_size(
-        pred_preconditioner_size
-    ), gpytorch.settings.max_cg_iterations(
-        pred_cg_iters
+    # Final predictions with trained model
+    with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
     ), gpytorch.settings.max_lanczos_quadrature_iterations(
-        pred_cg_iters
+        params.get("pred_cg_niter", params.get("cg_iters", 1000))
+    ), gpytorch.settings.max_preconditioner_size(
+        params.get(
+            "pred_max_preconditioner_size", params.get("max_preconditioner_size", 100)
+        )
     ):
-        warnings.simplefilter("ignore")
-        test_output = model(test_x_gp)
-        observed_pred = likelihood(test_output)
-        y_pred = observed_pred.mean.numpy()
-        y_std = observed_pred.stddev.numpy()
+        predictions = likelihood(model(test_x_torch))
+        y_pred = predictions.mean.numpy()
+        y_var = predictions.variance.numpy()
+        y_std = np.sqrt(y_var)
 
     t_pred_end = time.perf_counter()
 
     expected_dtype = np.float64 if torch_dtype == torch.float64 else np.float32
-    assert (
-        y_pred.dtype == expected_dtype
-    ), f"GPyTorch prediction mean dtype {y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        y_std.dtype == expected_dtype
-    ), f"GPyTorch prediction stddev dtype {y_std.dtype} does not match expected {expected_dtype}"
+    assert y_pred.dtype == expected_dtype, f"{y_pred.dtype} != {expected_dtype}"
+    assert y_std.dtype == expected_dtype, f"{y_std.dtype} != {expected_dtype}"
     assert (
         init_y_pred.dtype == expected_dtype
-    ), f"GPyTorch initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        init_y_std.dtype == expected_dtype
-    ), f"GPyTorch initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
+    ), f"{init_y_pred.dtype} != {expected_dtype}"
+    assert init_y_std.dtype == expected_dtype, f"{init_y_std.dtype} != {expected_dtype}"
 
-    with torch.no_grad():
-        lengthscale = model.covar_module.base_kernel.lengthscale.item()
-        outputscale = model.covar_module.outputscale.item()
-        noise = likelihood.noise.item()
-        hyperparams = [lengthscale, outputscale, noise]
+    hyperparams = [
+        model.likelihood.noise.item(),
+        model.covar_module.base_kernel.lengthscale.detach().numpy().flatten().tolist(),
+        model.covar_module.outputscale.item(),
+        model.mean_module.constant.item(),
+    ]
 
     results = {
         "y_pred": y_pred,
@@ -183,5 +165,4 @@ def run_gpytorch(
         "hyperparams": hyperparams,
         "cg_warning": cg_warning_occurred,
     }
-
     return results

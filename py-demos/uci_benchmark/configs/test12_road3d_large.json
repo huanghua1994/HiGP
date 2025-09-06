@@ -1,18 +1,18 @@
 {
-  "name": "road3d_large",
+  "name": "test12_road3d_large",
   "datasets": [
     "road3d"
   ],
   "n_train": 150000,
-  "n_test": 100,
-  "n_repeats": 1,
+  "n_test": 200,
+  "n_repeats": 3,
   "kernel": "gaussian",
   "higp_params": {
     "maxits": 50,
     "lr": 0.01,
     "mvtype": 0,
-    "afn_rank": 10,
-    "afn_lfil": 0,
+    "train_afn_rank": 10,
+    "train_afn_lfil": 0,
     "train_cg_niter": 20,
     "train_cg_nvec": 10,
     "pred_cg_niter": 50,

@@ -1,21 +1,25 @@
 {
-  "name": "test02",
+  "name": "test03_rosenbrock_rbf",
   "functions": [
-    "branin"
+    "rosenbrock"
   ],
   "dimensions": [
-    2
+    2,
+    20
   ],
   "n_train_configs": {
     "2": [
-      50000
+      30000
+    ],
+    "20": [
+      30000
     ]
   },
-  "n_test": 100,
+  "n_test": 200,
   "noise_levels": [
     0.01
   ],
-  "n_repeats": 1,
+  "n_repeats": 3,
   "kernel": "gaussian",
   "higp_params": {
     "maxits": 50,

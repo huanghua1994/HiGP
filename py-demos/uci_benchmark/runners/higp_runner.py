@@ -1,84 +1,14 @@
-"""HiGP runner for UCI benchmark."""
-
-import os
-import sys
 import time
-import gc
-import ctypes
-import tempfile
-import stat
-from contextlib import contextmanager
 import numpy as np
 import torch
-from ..utils import suppress_output
-
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-
 import higp
+import gc
+import os
+from ..utils import suppress_output, capture_output, prepare_for_higp
 
 
-@contextmanager
-def capture_output():
-    """Capture stdout/stderr and return the text."""
-    try:
-        libc = ctypes.CDLL(None)
-        libc.fflush(None)
-    except (OSError, AttributeError):
-        pass
-
-    old_stdout_fd = os.dup(1)
-    old_stderr_fd = os.dup(2)
-    tmp_fd = -1
-    tmp_filename = None
-
-    try:
-        tmp_fd, tmp_filename = tempfile.mkstemp(prefix="higp_capture_", suffix=".txt")
-        os.chmod(tmp_filename, stat.S_IRUSR | stat.S_IWUSR)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        os.dup2(tmp_fd, 1)
-        os.dup2(tmp_fd, 2)
-        os.close(tmp_fd)
-        tmp_fd = -1
-
-        yield tmp_filename
-
-    finally:
-        try:
-            libc = ctypes.CDLL(None)
-            libc.fflush(None)
-        except (OSError, AttributeError):
-            pass
-
-        os.dup2(old_stdout_fd, 1)
-        os.dup2(old_stderr_fd, 2)
-        os.close(old_stdout_fd)
-        os.close(old_stderr_fd)
-
-        if tmp_fd >= 0:
-            try:
-                os.close(tmp_fd)
-            except OSError:
-                pass
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-
-def run_higp(
-    train_x,
-    train_y,
-    test_x,
-    test_y,
-    params,
-    dtype_str="float32",
-    seed=42,
-):
-    """Run HiGP on UCI dataset."""
+def run_higp(train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42):
+    """Run HiGP on the given data"""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         np_dtype = np.float64
@@ -91,12 +21,8 @@ def run_higp(
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    mvtype = params.get("mvtype", 0)
-
-    train_x = train_x.astype(np_dtype)
-    train_y = train_y.astype(np_dtype)
-    test_x = test_x.astype(np_dtype)
-    test_y = test_y.astype(np_dtype)
+    train_x_higp, train_y_higp = prepare_for_higp(train_x, train_y, dtype=np_dtype)
+    test_x_higp, _ = prepare_for_higp(test_x, np.array([]), dtype=np_dtype)
 
     kernel_map = {
         "gaussian": higp.GaussianKernel,
@@ -112,14 +38,12 @@ def run_higp(
         "kernel": params.get("kernel", "gaussian").lower(),
     }
 
-    t_train_start = time.perf_counter()
-
     with capture_output() as tmp_file:
         gprproblem = higp.gprproblem.setup(
-            data=train_x,
-            label=train_y,
+            data=train_x_higp,
+            label=train_y_higp,
             kernel_type=kernel_type,
-            mvtype=mvtype,
+            mvtype=params.get("mvtype", 0),
             afn_rank=params.get("train_afn_rank", params.get("afn_rank", 10)),
             afn_lfil=params.get("train_afn_lfil", params.get("afn_lfil", 0)),
             niter=params.get("train_cg_niter", params.get("cg_iters", 20)),
@@ -130,12 +54,12 @@ def run_higp(
         model = higp.GPRModel(gprproblem, dtype=torch_dtype)
 
         init_pred = higp.gpr_prediction(
-            data_train=train_x,
-            label_train=train_y,
-            data_prediction=test_x,
+            data_train=train_x_higp,
+            label_train=train_y_higp,
+            data_prediction=test_x_higp,
             kernel_type=kernel_type,
             gp_params=model.get_params(),
-            mvtype=mvtype,
+            mvtype=params.get("mvtype", 0),
             niter=params.get("pred_cg_niter", params.get("cg_iters", 50)),
             tol=params.get("pred_cg_tol", 1e-2),
             afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 100)),
@@ -183,23 +107,22 @@ def run_higp(
 
     optimizer = torch.optim.Adam(model.parameters(), lr=params.get("lr", 0.01))
 
+    t_train_start = time.perf_counter()
     with suppress_output():
         loss_history, _ = higp.gpr_torch_minimize(
             model, optimizer, maxits=params.get("maxits", 50), print_info=False
         )
-
     t_train_end = time.perf_counter()
 
     t_pred_start = time.perf_counter()
-
     with suppress_output():
         pred = higp.gpr_prediction(
-            data_train=train_x,
-            label_train=train_y,
-            data_prediction=test_x,
+            data_train=train_x_higp,
+            label_train=train_y_higp,
+            data_prediction=test_x_higp,
             kernel_type=kernel_type,
             gp_params=model.get_params(),
-            mvtype=mvtype,
+            mvtype=params.get("mvtype", 0),
             niter=params.get("pred_cg_niter", params.get("cg_iters", 50)),
             tol=params.get("pred_cg_tol", 1e-2),
             afn_rank=params.get("pred_afn_rank", params.get("afn_rank", 100)),
@@ -211,16 +134,14 @@ def run_higp(
     expected_dtype = np_dtype
     assert (
         pred.prediction_mean.dtype == expected_dtype
-    ), f"HiGP prediction mean dtype {pred.prediction_mean.dtype} does not match expected {expected_dtype}"
+    ), f"{pred.prediction_mean.dtype} != {expected_dtype}"
     assert (
         pred.prediction_stddev.dtype == expected_dtype
-    ), f"HiGP prediction stddev dtype {pred.prediction_stddev.dtype} does not match expected {expected_dtype}"
+    ), f"{pred.prediction_stddev.dtype} != {expected_dtype}"
     assert (
         init_y_pred.dtype == expected_dtype
-    ), f"HiGP initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        init_y_std.dtype == expected_dtype
-    ), f"HiGP initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
+    ), f"{init_y_pred.dtype} != {expected_dtype}"
+    assert init_y_std.dtype == expected_dtype, f"{init_y_std.dtype} != {expected_dtype}"
 
     results = {
         "y_pred": pred.prediction_mean,

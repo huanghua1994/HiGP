@@ -1,4 +1,4 @@
-"""Data processing utilities for UCI benchmark."""
+"""Data processing utilities."""
 
 import numpy as np
 from typing import Tuple, Optional

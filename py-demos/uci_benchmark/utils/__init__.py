@@ -4,7 +4,7 @@ from .data_processing import (
     train_test_normalize,
 )
 from .metrics import compute_rmse, compute_r2, compute_nll
-from .common import suppress_output
+from .common import suppress_output, capture_output
 
 __all__ = [
     "load_uci_dataset",
@@ -16,4 +16,5 @@ __all__ = [
     "compute_r2",
     "compute_nll",
     "suppress_output",
+    "capture_output",
 ]

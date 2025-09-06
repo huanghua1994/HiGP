@@ -1,5 +1,5 @@
 {
-  "name": "bike_small",
+  "name": "test10_bike",
   "datasets": [
     "bike"
   ],
@@ -10,9 +10,9 @@
   "higp_params": {
     "maxits": 500,
     "lr": 0.01,
-    "mvtype": 1,
-    "afn_rank": 10,
-    "afn_lfil": 0,
+    "mvtype": 0,
+    "train_afn_rank": 10,
+    "train_afn_lfil": 0,
     "train_cg_niter": 20,
     "train_cg_nvec": 10,
     "pred_cg_niter": 50,

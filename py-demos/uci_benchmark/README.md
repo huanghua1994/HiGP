@@ -5,14 +5,14 @@ A comprehensive benchmarking framework for comparing HiGP and GPyTorch performan
 ## Quick Start
 
 ```bash
-# Small Bike dataset test (3000 samples)
-python test_uci.py --config configs/test_bike_small.json --output_dir results
+# Small Bike dataset test (3000 samples) comparing GP accuracy
+python test_uci.py --config configs/test10_bike.json --output_dir results
 
-# Small Road3D with H² matrix (30000 samples, HiGP only)
-python test_uci.py --config configs/test_road3d_small.json --output_dir results --higp-only
+# Small Road3D with H² matrix (50000 samples, HiGP only)
+python test_uci.py --config configs/test11_road3d_small.json --output_dir results --higp-only
 
-# Run comprehensive benchmark on all datasets
-python test_uci.py --config configs/test_all_datasets.json --output_dir results
+# Large Road3D dataset test (150000 samples, HiGP only)
+python test_uci.py --config configs/test12_road3d_large.json --output_dir results --higp-only
 ```
 
 ## Supported Datasets

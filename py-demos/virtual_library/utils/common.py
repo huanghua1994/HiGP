@@ -1,4 +1,4 @@
-"""Common utilities for Virtual Library."""
+"""Common utilities."""
 
 import os
 import sys

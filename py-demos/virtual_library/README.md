@@ -1,26 +1,21 @@
 # Virtual Library Benchmark Framework
 
-A comprehensive benchmarking framework for comparing HiGP and GPyTorch performance on synthetic test functions.
+A benchmark framework for comparing HiGP and GPyTorch performance on synthetic test functions.
 
 ## Quick Start
 
 ```bash
 # Small problems (3000 points) comparing accuracy of HiGP and GPyTorch
-# Exact kernel matrices are formed and stored in memory
-# Suitable for accuracy comparison rather than speed benchmarking
 python test_vl.py --config configs/test00_accuracy.json --output_dir results
 
-# Larger problems with dimension > 3 (30000 points) comparing HiGP and GPyTorch
-# HiGP uses on-the-fly kernel matrix computations for memory efficiency
-# Expected to show speed advantages for HiGP
-python test_vl.py --config configs/test01_high_dimension.json --output_dir results
+# Larger problems with dimension <=3 (50000/150000 points), HiGP only
+python test_vl.py --config configs/test01_high_dimension.json --output_dir results --higp-only
 
-# Large-scale problems with dimension <= 3 (160,000 points), HiGP-only
-# HiGP uses H² hierarchical matrices
-python test_vl.py --config configs/test02_low_dimension.json --higp-only --output_dir results
+# Rastrigin 2D/20D (30000 points), matern32 kernel, comparing efficiency of HiGP and GPyTorch
+python test_vl.py --config configs/test02_rastrigin_matern32.json --higp-only --output_dir results
 
-# Run comprehensive benchmark suite
-python test_vl.py --config configs/test03_full_benchmark.json --output_dir results
+# Rosenbrock 2D/5D/20D (30000 points), rbf kernel, comparing efficiency of HiGP and GPyTorch
+python test_vl.py --config configs/test03_rosenbrock_rbf.json --output_dir results
 ```
 
 ## Test Functions

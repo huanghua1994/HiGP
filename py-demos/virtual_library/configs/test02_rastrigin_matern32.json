@@ -1,24 +1,28 @@
 {
-  "name": "test01",
+  "name": "test02_rastrigin_matern32",
   "functions": [
-    "rosenbrock"
+    "rastrigin"
   ],
   "dimensions": [
-    5
+    2,
+    20
   ],
   "n_train_configs": {
-    "5": [
+    "2": [
+      30000
+    ],
+    "20": [
       30000
     ]
   },
-  "n_test": 100,
+  "n_test": 200,
   "noise_levels": [
     0.01
   ],
-  "n_repeats": 1,
-  "kernel": "gaussian",
+  "n_repeats": 3,
+  "kernel": "matern32",
   "higp_params": {
-    "maxits": 10,
+    "maxits": 50,
     "lr": 0.01,
     "train_cg_niter": 20,
     "train_afn_rank": 10,
@@ -31,7 +35,7 @@
     "train_cg_nvec": 10
   },
   "gpytorch_params": {
-    "maxits": 10,
+    "maxits": 50,
     "lr": 0.01,
     "train_max_preconditioner_size": 10,
     "pred_max_preconditioner_size": 100,

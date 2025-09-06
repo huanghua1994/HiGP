@@ -8,7 +8,7 @@ from ..utils import suppress_output
 
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, kernel_type="gaussian"):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        super().__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
 
         if kernel_type == "matern32":
@@ -29,21 +29,7 @@ class ExactGPModel(gpytorch.models.ExactGP):
 def run_gpytorch(
     train_x, train_y, test_x, test_y, params, dtype_str="float32", seed=42
 ):
-    """Run GPyTorch on the given data
-
-    Args:
-        train_x: Training features (N, D)
-        train_y: Training targets (N,)
-        test_x: Test features (M, D)
-        test_y: Test targets (M,)
-        params: Dictionary with GPyTorch parameters
-        dtype_str: Data type string ("float32" or "float64")
-        seed: Random seed
-
-    Returns:
-        Dictionary with results
-    """
-
+    """Run GPyTorch on the given data"""
     if dtype_str == "float64":
         torch.set_default_dtype(torch.float64)
         torch_dtype = torch.float64
@@ -65,7 +51,6 @@ def run_gpytorch(
 
     model.eval()
     likelihood.eval()
-
     # Initial predictions with default GPyTorch CG settings
     with suppress_output(), torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.max_cg_iterations(
         params.get("pred_cg_niter", params.get("cg_iters", 1000))
@@ -85,6 +70,7 @@ def run_gpytorch(
     likelihood.train()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=params.get("lr", 0.01))
+
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
     loss_history = []
@@ -92,13 +78,12 @@ def run_gpytorch(
 
     t_train_start = time.perf_counter()
 
-    # Training with CG settings
     with suppress_output(), warnings.catch_warnings(record=True) as w:
-        # Filter to only catch NumericalWarning from linear_operator
         warnings.filterwarnings(
             "always", category=UserWarning, module="linear_operator"
         )
 
+        # Training with CG settings
         with gpytorch.settings.max_cg_iterations(
             params.get("train_cg_niter", params.get("cg_iters", 1000))
         ), gpytorch.settings.max_lanczos_quadrature_iterations(
@@ -152,20 +137,13 @@ def run_gpytorch(
 
     t_pred_end = time.perf_counter()
 
-    # Verify dtype precision matches expected configuration
     expected_dtype = np.float64 if torch_dtype == torch.float64 else np.float32
-    assert (
-        y_pred.dtype == expected_dtype
-    ), f"GPyTorch prediction mean dtype {y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        y_std.dtype == expected_dtype
-    ), f"GPyTorch prediction stddev dtype {y_std.dtype} does not match expected {expected_dtype}"
+    assert y_pred.dtype == expected_dtype, f"{y_pred.dtype} != {expected_dtype}"
+    assert y_std.dtype == expected_dtype, f"{y_std.dtype} != {expected_dtype}"
     assert (
         init_y_pred.dtype == expected_dtype
-    ), f"GPyTorch initial prediction mean dtype {init_y_pred.dtype} does not match expected {expected_dtype}"
-    assert (
-        init_y_std.dtype == expected_dtype
-    ), f"GPyTorch initial prediction stddev dtype {init_y_std.dtype} does not match expected {expected_dtype}"
+    ), f"{init_y_pred.dtype} != {expected_dtype}"
+    assert init_y_std.dtype == expected_dtype, f"{init_y_std.dtype} != {expected_dtype}"
 
     hyperparams = [
         model.likelihood.noise.item(),
@@ -187,5 +165,4 @@ def run_gpytorch(
         "hyperparams": hyperparams,
         "cg_warning": cg_warning_occurred,
     }
-
     return results

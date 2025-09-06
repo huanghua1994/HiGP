@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-"""Main test script for UCI benchmark."""
-
 import os
 import sys
 import json
@@ -14,7 +12,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from uci_benchmark.utils import (
     load_uci_dataset,
     train_test_normalize,
-    prepare_for_higp,
     compute_rmse,
     compute_r2,
     compute_nll,
@@ -34,7 +31,7 @@ def run_single_experiment(
     repeat_id,
     skip_gpytorch=False,
 ):
-    """Run a single experiment comparing HiGP and GPyTorch on UCI data."""
+    """Run a single experiment comparing HiGP and GPyTorch"""
 
     print(f"  Loading {dataset_name} dataset...")
 
@@ -49,36 +46,32 @@ def run_single_experiment(
         train_x, train_y, test_x, test_y
     )
 
-    np_dtype = np.float64 if dtype_str == "float64" else np.float32
-    train_x_higp, train_y_higp = prepare_for_higp(train_x, train_y, dtype=np_dtype)
-    test_x_higp, test_y_higp = prepare_for_higp(test_x, test_y, dtype=np_dtype)
-
     print(f"    Data loaded: {n_train} train, {n_test} test samples")
     print(f"    Features: {train_x.shape[1]}")
 
     print(f"  Running HiGP...")
     higp_params_with_kernel = {**higp_params, "kernel": kernel}
     higp_results = run_higp(
-        train_x_higp,
-        train_y_higp,
-        test_x_higp,
-        test_y_higp,
+        train_x,
+        train_y,
+        test_x,
+        test_y,
         higp_params_with_kernel,
         dtype_str=dtype_str,
         seed=seed,
     )
 
-    higp_init_rmse = compute_rmse(test_y_higp, higp_results["init_y_pred"])
-    higp_init_r2 = compute_r2(test_y_higp, higp_results["init_y_pred"])
+    higp_init_rmse = compute_rmse(test_y, higp_results["init_y_pred"])
+    higp_init_r2 = compute_r2(test_y, higp_results["init_y_pred"])
     higp_init_nll = compute_nll(
-        test_y_higp, higp_results["init_y_pred"], higp_results["init_y_std"]
+        test_y, higp_results["init_y_pred"], higp_results["init_y_std"]
     )
 
     print(f"    Initial RMSE: {higp_init_rmse:.6f}")
 
-    higp_rmse = compute_rmse(test_y_higp, higp_results["y_pred"])
-    higp_r2 = compute_r2(test_y_higp, higp_results["y_pred"])
-    higp_nll = compute_nll(test_y_higp, higp_results["y_pred"], higp_results["y_std"])
+    higp_rmse = compute_rmse(test_y, higp_results["y_pred"])
+    higp_r2 = compute_r2(test_y, higp_results["y_pred"])
+    higp_nll = compute_nll(test_y, higp_results["y_pred"], higp_results["y_std"])
 
     print(f"    Final RMSE: {higp_rmse:.6f}")
     print(f"    Training time: {higp_results['training_time']:.2f}s")
@@ -87,27 +80,27 @@ def run_single_experiment(
         print(f"  Running GPyTorch...")
         gpytorch_params_with_kernel = {**gpytorch_params, "kernel": kernel}
         gpytorch_results = run_gpytorch(
-            train_x_higp,
-            train_y_higp,
-            test_x_higp,
-            test_y_higp,
+            train_x,
+            train_y,
+            test_x,
+            test_y,
             gpytorch_params_with_kernel,
             dtype_str=dtype_str,
             seed=seed,
         )
 
-        gpytorch_init_rmse = compute_rmse(test_y_higp, gpytorch_results["init_y_pred"])
-        gpytorch_init_r2 = compute_r2(test_y_higp, gpytorch_results["init_y_pred"])
+        gpytorch_init_rmse = compute_rmse(test_y, gpytorch_results["init_y_pred"])
+        gpytorch_init_r2 = compute_r2(test_y, gpytorch_results["init_y_pred"])
         gpytorch_init_nll = compute_nll(
-            test_y_higp, gpytorch_results["init_y_pred"], gpytorch_results["init_y_std"]
+            test_y, gpytorch_results["init_y_pred"], gpytorch_results["init_y_std"]
         )
 
         print(f"    Initial RMSE: {gpytorch_init_rmse:.6f}")
 
-        gpytorch_rmse = compute_rmse(test_y_higp, gpytorch_results["y_pred"])
-        gpytorch_r2 = compute_r2(test_y_higp, gpytorch_results["y_pred"])
+        gpytorch_rmse = compute_rmse(test_y, gpytorch_results["y_pred"])
+        gpytorch_r2 = compute_r2(test_y, gpytorch_results["y_pred"])
         gpytorch_nll = compute_nll(
-            test_y_higp, gpytorch_results["y_pred"], gpytorch_results["y_std"]
+            test_y, gpytorch_results["y_pred"], gpytorch_results["y_std"]
         )
 
         print(f"    Final RMSE: {gpytorch_rmse:.6f}")
@@ -129,12 +122,12 @@ def run_single_experiment(
         "kernel": kernel,
         "repeat_id": repeat_id,
         "higp": {
-            "init_rmse": float(higp_init_rmse),
-            "init_r2": float(higp_init_r2),
-            "init_nll": float(higp_init_nll),
-            "rmse": float(higp_rmse),
-            "r2": float(higp_r2),
-            "nll": float(higp_nll),
+            "init_rmse": higp_init_rmse,
+            "init_r2": higp_init_r2,
+            "init_nll": higp_init_nll,
+            "rmse": higp_rmse,
+            "r2": higp_r2,
+            "nll": higp_nll,
             "training_time": higp_results["training_time"],
             "inference_time": higp_results["inference_time"],
             "init_loss": higp_results["init_loss"],
@@ -146,12 +139,12 @@ def run_single_experiment(
 
     if not skip_gpytorch:
         result["gpytorch"] = {
-            "init_rmse": float(gpytorch_init_rmse),
-            "init_r2": float(gpytorch_init_r2),
-            "init_nll": float(gpytorch_init_nll),
-            "rmse": float(gpytorch_rmse),
-            "r2": float(gpytorch_r2),
-            "nll": float(gpytorch_nll),
+            "init_rmse": gpytorch_init_rmse,
+            "init_r2": gpytorch_init_r2,
+            "init_nll": gpytorch_init_nll,
+            "rmse": gpytorch_rmse,
+            "r2": gpytorch_r2,
+            "nll": gpytorch_nll,
             "training_time": gpytorch_results["training_time"],
             "inference_time": gpytorch_results["inference_time"],
             "init_loss": gpytorch_results["init_loss"],
@@ -167,12 +160,12 @@ def run_single_experiment(
         "kernel": kernel,
         "repeat_id": repeat_id,
         "higp": {
-            "init_rmse": float(higp_init_rmse),
-            "init_r2": float(higp_init_r2),
-            "init_nll": float(higp_init_nll),
-            "rmse": float(higp_rmse),
-            "r2": float(higp_r2),
-            "nll": float(higp_nll),
+            "init_rmse": higp_init_rmse,
+            "init_r2": higp_init_r2,
+            "init_nll": higp_init_nll,
+            "rmse": higp_rmse,
+            "r2": higp_r2,
+            "nll": higp_nll,
             "training_time": higp_results["training_time"],
             "inference_time": higp_results["inference_time"],
         },
@@ -180,12 +173,12 @@ def run_single_experiment(
 
     if not skip_gpytorch:
         summary_result["gpytorch"] = {
-            "init_rmse": float(gpytorch_init_rmse),
-            "init_r2": float(gpytorch_init_r2),
-            "init_nll": float(gpytorch_init_nll),
-            "rmse": float(gpytorch_rmse),
-            "r2": float(gpytorch_r2),
-            "nll": float(gpytorch_nll),
+            "init_rmse": gpytorch_init_rmse,
+            "init_r2": gpytorch_init_r2,
+            "init_nll": gpytorch_init_nll,
+            "rmse": gpytorch_rmse,
+            "r2": gpytorch_r2,
+            "nll": gpytorch_nll,
             "training_time": gpytorch_results["training_time"],
             "inference_time": gpytorch_results["inference_time"],
             "cg_warning": gpytorch_results.get("cg_warning", False),
@@ -198,7 +191,7 @@ def run_single_experiment(
     detailed["higp"]["init_y_std"] = higp_results["init_y_std"].tolist()
     detailed["higp"]["loss_history"] = higp_results["loss_history"]
     detailed["higp"]["hyperparams"] = higp_results["hyperparams"]
-    detailed["test_y"] = test_y_higp.tolist()
+    detailed["test_y"] = test_y.tolist()
 
     if not skip_gpytorch and gpytorch_results:
         detailed["gpytorch"]["y_pred"] = gpytorch_results["y_pred"].tolist()

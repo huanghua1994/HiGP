@@ -3,7 +3,6 @@ import os
 import sys
 import json
 import argparse
-import time
 import numpy as np
 from datetime import datetime
 
