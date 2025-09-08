@@ -34,3 +34,14 @@ HiGP is developed by:
 
 We welcome your questions.
 Please contact Hua Huang and Tianshi Xu specifically for questions related to package usage, features, and development.
+
+If you use HiGP, please cite the following paper:
+
+```text
+@misc{HiGP2025,
+    author = {Hua Huang and Tianshi Xu and Yuanzhe Xi and Edmond Chow},
+    title = {{HiGP}: A high-performance {Python} package for {Gaussian} Process},
+    year = {2025},
+    eprint = {arXiv:2503.02259},
+}
+```
