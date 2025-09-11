@@ -100,3 +100,6 @@ pred = higp.gpr_prediction(train_x, train_y, test_x,
 ```
 
 We note that the HiGP Python interfaces (except for `GPRModel` and `GPCModel` models) are *stateless*. This design aims to simplify the interface and decouple different operations. A user can train and use different GP models with the same or different data and configurations in the same file.
+
+# References
+
