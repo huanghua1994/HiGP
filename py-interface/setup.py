@@ -169,6 +169,6 @@ setuptools.setup(
     version = datetime.today().strftime("%Y.%m.%d"),
     description = "HiGP: High-performance Gaussian process library",
     packages = setuptools.find_packages(),
-    install_requires = ["numpy>=1.15", "scipy>=1.3", "torch>=1.3"],
+    install_requires = ["numpy>=1.24.4", "scipy>=1.3", "torch>=1.3"],
     ext_modules = [higp_cext]
 )

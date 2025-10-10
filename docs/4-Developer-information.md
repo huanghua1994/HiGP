@@ -30,8 +30,8 @@ The HiGP Python part implements the following modules:
 
 For testing or debugging purposes, you may want to build the HiGP package on local machine instead of installing the release versions using `pip`. We also strongly suggest building the HiGP Python package in a conda environment. To build the HiGP Python package, you need:
 
-* Python 3.7 or a newer version,
-* NumPy 1.15 or a newer version.
+* Python 3.8 or a newer version (Python 3.10 or a newer version is recommended),
+* NumPy 1.24.4 or a newer version (2.2.2 or a newer version is recommended).
 
 Run the following shell commands:
 
