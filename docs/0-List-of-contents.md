@@ -19,3 +19,4 @@ Gaussian processes (GPs) are a set of flexible, non-parametric Bayesian methods 
     * 4.3 Travis CI
     * 4.4 Building the Python packages for release
     * 4.5 Debugging the C/C++ source code on local machine
+5. [Performance tests](https://github.com/huanghua1994/HiGP/blob/main/docs/5-Performance-tests.md)
