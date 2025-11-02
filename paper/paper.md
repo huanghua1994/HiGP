@@ -75,7 +75,7 @@ Secondly, HiGP uses iterative solvers with the newly proposed AFN preconditioner
 
 Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on the automatic differentiation (autodiff) provided in PyTorch to calculate gradients (\autoref{eq:trace}). However, autodiff can be inefficient and inaccurate for computing the gradient of the preconditioner, so we use hand-coded gradient calculations for better performance and accuracy.
 
-The HiGP documentation[^1] provides a comparison of the accuracy and performance of HiGP and GPyTorch.
+The HiGP documentation[^1] provides a comparison of the accuracy and performance of HiGP version 2025.8.21 (git commit 8942631) and GPyTorch version 1.14. The tests were performed on one node (shared memory) with a 24-core 3.0 GHz Intel Xeon Gold 6248R CPU, using the "Bike Sharing" and "3D Road Network" data sets from the UCI Machine Learning Datasets and three synthetic target functions "Rosenbrock", "Rastrigin", and "Branin" from the Virtual Library of Simulation Experiments; HiGP is 539\% to 8061\% faster than GPyTorch.
 
 [^1]: https://github.com/huanghua1994/HiGP/blob/main/docs/5-Performance-tests.md
 
