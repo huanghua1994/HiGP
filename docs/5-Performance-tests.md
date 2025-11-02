@@ -1,6 +1,6 @@
 # 5. Performance tests
 
-We conducted performance tests on an Ubuntu 20.04 LTS machine with a 24-core 3.0 GHz Intel Xeon Gold 6248R CPU. We used PyTorch 2.8.0 and GPyTorch 1.14 for the tests.
+We conducted performance tests on an Ubuntu 20.04 LTS machine with a 24-core 3.0 GHz Intel Xeon Gold 6248R CPU. We used PyTorch 2.8.0, GPyTorch 1.14, and HiGP version 2025.8.21 (git commit 8942631cd9fb4f213afd25032247e689da2ee2c0) for the tests.
 
 We tested two data sets from the [UCI Machine Learning Datasets](https://archive.ics.uci.edu/datasets): the "Bike Sharing" and the "3D Road Network" data sets. We also tested three synthetic target functions from the [Virtual Library of Simulation Experiments](https://www.sfu.ca/~ssurjano) with randomly sampled data points: Rosenbrock, Rastrigin, and Branin. All datasets were normalized with Z-score normalization ($\mu=0$, $\sigma=1$) applied to both features and targets using statistics from the training set. The results represent averages over three independent runs for statistical reliability. Please check the code in [py-demos/uci_benchmark](https://github.com/huanghua1994/HiGP/tree/main/py-demos/uci_benchmark) and [py-demos/virtual_library](https://github.com/huanghua1994/HiGP/tree/main/py-demos/virtual_library) for more details of the tests.
 

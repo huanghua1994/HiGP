@@ -167,7 +167,7 @@ higp_cext = setuptools.Extension(
 setuptools.setup(
     name = "higp",
     version = datetime.today().strftime("%Y.%m.%d"),
-    description = "HiGP: High-performance Gaussian process library",
+    description = "HiGP is a high-performance Python package for using Gaussian processes (GPs) with large datasets. Its functionality includes estimating GP hyperparameters, GP regression, and GP classification. Please visit https://github.com/huanghua1994/HiGP for the source code, documentation, and examples.",
     packages = setuptools.find_packages(),
     install_requires = ["numpy>=1.24.4", "scipy>=1.3", "torch>=1.3"],
     ext_modules = [higp_cext]
