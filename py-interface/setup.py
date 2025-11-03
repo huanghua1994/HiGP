@@ -164,10 +164,16 @@ higp_cext = setuptools.Extension(
     language = "c++"
 )
 
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "../README.md").read_text()
+
 setuptools.setup(
     name = "higp",
     version = datetime.today().strftime("%Y.%m.%d"),
-    description = "HiGP is a high-performance Python package for using Gaussian processes (GPs) with large datasets. Its functionality includes estimating GP hyperparameters, GP regression, and GP classification. Please visit https://github.com/huanghua1994/HiGP for the source code, documentation, and examples.",
+    description = "HiGP is a high-performance Python package for using Gaussian processes (GPs) with large datasets.",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages = setuptools.find_packages(),
     install_requires = ["numpy>=1.24.4", "scipy>=1.3", "torch>=1.3"],
     ext_modules = [higp_cext]
