@@ -19,19 +19,19 @@ We used two evaluation strategies:
 The following table lists the results of small-scale experiments. These results confirm that HiGP achieves comparable prediction accuracy to GPyTorch.
 
 | Dataset | n\_train | Kernel | HiGP Mode | HiGP Final RMSE | GPyTorch Final RMSE |
-|:-------:|--------:|:------:|:---------:|--------------:|-----------------:|
-| Bike | 3,000 | RBF | dense | 0.0290 | 0.0279 |
-| Rosenbrock (5D) | 3,000 | Matern32 | dense | 0.0609 | 0.0669 |
+|---------|---------|--------|-----------|-----------------|---------------------|
+| Bike | 3,000 | RBF | dense | 0.0285 | 0.0284 |
+| Rosenbrock (5D) | 3,000 | Matern32 | dense | 0.0603 | 0.0658 |
 
 The following table lists the results of large-scale experiments. These results show that HiGP achieves significant computational advantages over GPyTorch under the same computational budget constraints, and HiGP's H2 matrix mode enables the efficient processing of datasets with large sizes.
 
 | Dataset | n\_train | Kernel | HiGP Mode | HiGP Time (s) | GPyTorch Time (s) |
-|:-------:|--------:|:------:|:---------:|--------------:|-----------------:|
-| Road3D | 50,000 | RBF | H2 | 420.7 | 34,278 |
-| Road3D | 150,000 | RBF | H2 | 927.3 | — |
-| Branin | 50,000 | RBF | H2 | 296.3 | - |
-| Branin | 150,000 | RBF | H2 | 602.0 | — |
-| Rastrigin (2D) | 30,000 | Matern32 | H2 | 213.2 | 3,648 |
-| Rastrigin (20D) | 30,000 | Matern32 | on-the-fly | 527.2 | 3,376 |
-| Rosenbrock (2D) | 30,000 | RBF | H2 | 176.6 | 3,831 |
-| Rosenbrock (20D) | 30,000 | RBF | on-the-fly | 520.4 | 3,633 |
+|---------|---------|--------|-----------|---------------|------------------|
+| Road3D | 50,000 | RBF | H2 | 191.2 | 14,739.3 |
+| Road3D | 150,000 | RBF | H2 | 383.5 | — |
+| Branin | 50,000 | RBF | H2 | 132.2 | — |
+| Branin | 150,000 | RBF | H2 | 262.9 | — |
+| Rastrigin (2D) | 30,000 | Matern32 | H2 | 100.6 | 278.2 |
+| Rastrigin (20D) | 30,000 | Matern32 | on-the-fly | 198.5 | 275.6 |
+| Rosenbrock (2D) | 30,000 | RBF | H2 | 82.2 | 231.3 |
+| Rosenbrock (20D) | 30,000 | RBF | on-the-fly | 190.8 | 230.6 |
