@@ -75,10 +75,6 @@ Secondly, HiGP uses iterative solvers with the newly proposed AFN preconditioner
 
 Lastly, HiGP uses accurate and efficient hand-coded gradient calculations. GPyTorch relies on the automatic differentiation (autodiff) provided in PyTorch to calculate gradients (\autoref{eq:trace}). However, autodiff can be inefficient and inaccurate for computing the gradient of the preconditioner, so we use hand-coded gradient calculations for better performance and accuracy.
 
-The HiGP documentation[^1] provides a comparison of the accuracy and performance of HiGP version 2025.8.21 (git commit 8942631) and GPyTorch version 1.14. The tests were performed on one node (shared memory) with a 24-core 3.0 GHz Intel Xeon Gold 6248R CPU, using the "Bike Sharing" and "3D Road Network" data sets from the UCI Machine Learning Datasets and three synthetic target functions "Rosenbrock", "Rastrigin", and "Branin" from the Virtual Library of Simulation Experiments; HiGP is 539\% to 8061\% faster than GPyTorch.
-
-[^1]: https://github.com/huanghua1994/HiGP/blob/main/docs/5-Performance-tests.md
-
 # Design and Implementation
 
 We implemented HiGP in Python 3 and C++ with the goal of providing both a set of ready-to-use out-of-the-box Python interfaces for regular users and a set of reusable high-performance shared-memory multithreading computational primitives for advanced users. The HiGP C++ code implements all performance-critical operations. The HiGP Python code wraps the C++ units into four basic Python modules: `krnlmatmodule` for computing kernel matrices and its derivatives, `precondmodule` for PCG solver with AFN preconditioner, `gprproblemmodule` and `gpcproblemmodule` for computing the the loss and gradient for GP regression and classification. The two modules `gprproblemmodule` and `gpcproblemmodule` allow a user to train a GP model with any gradient-based optimizer.
@@ -100,5 +96,65 @@ pred = higp.gpr_prediction(train_x, train_y, test_x,
 ```
 
 We note that the HiGP Python interfaces (except for `GPRModel` and `GPCModel` models) are *stateless*. This design aims to simplify the interface and decouple different operations. A user can train and use different GP models with the same or different data and configurations in the same file.
+
+# Numerical Experiments
+
+We conducted numerical experiments on an Ubuntu 20.04 LTS machine with dual Intel Xeon Gold 6248R CPU (2x12 cores in total). We used PyTorch 2.8.0, GPyTorch 1.14, and HiGP version 2025.11.3 for the tests.
+
+We tested two data sets from the UCI Machine Learning Datasets: the "Bike Sharing" and the "3D Road Network" data sets. We also tested three synthetic target functions from the Virtual Library of Simulation Experiments with randomly sampled data points: Rosenbrock, Rastrigin, and Branin. All datasets were normalized with Z-score normalization ($\mu=0$, $\sigma=1$) applied to both features and targets using statistics from the training set. The results represent averages over three independent runs for statistical reliability. Both HiGP and GPyTorch were configured with identical computational budgets to ensure a fair comparison. E2E tests use the following settings:
+
+- Optimizer steps: 50
+- CG iterations: 20 (training), 50 (prediction)
+- Preconditioner/AFN rank: 10 (training), 100 (prediction)
+- Optimizer: Adam with a learning rate of 0.01
+- Precision: 32-bit floating point (FP32)
+
+## End-to-End Tests
+
+We first compared the end-to-end (E2E) accuracy and performance between HiGP and GPyTorch. For accuracy comparison, we conducted experiments on two small datasets and the test results show HiGP achieves equivalent GP accuracy compared to GPyTorch:
+
+| Dataset | n\_train | Kernel | HiGP Mode | HiGP Final RMSE | GPyTorch Final RMSE |
+|---------|---------|--------|-----------|-----------------|---------------------|
+| Bike | 3,000 | RBF | dense | 0.0285 | 0.0284 |
+| Rosenbrock (5D) | 3,000 | Matern32 | dense | 0.0603 | 0.0658 |
+
+Then, we tested multiple large datasets and synthetic target functions to compare the performance. Test results show HiGP has better performance than GPyTorch under fixed computational budget constraints.
+
+| Dataset | n\_train | Kernel | HiGP Mode | HiGP Time (s) | GPyTorch Time (s) |
+|---------|---------|--------|-----------|---------------|------------------|
+| Road3D | 50,000 | RBF | H2 | 191.2 | 14,739.3 |
+| Road3D | 150,000 | RBF | H2 | 383.5 | — |
+| Branin | 50,000 | RBF | H2 | 132.2 | — |
+| Branin | 150,000 | RBF | H2 | 262.9 | — |
+| Rastrigin (2D) | 30,000 | Matern32 | H2 | 100.6 | 278.2 |
+| Rastrigin (20D) | 30,000 | Matern32 | on-the-fly | 198.5 | 275.6 |
+| Rosenbrock (2D) | 30,000 | RBF | H2 | 82.2 | 231.3 |
+| Rosenbrock (20D) | 30,000 | RBF | on-the-fly | 190.8 | 230.6 |
+
+## Parallel Strong Scaling Tests
+
+These tests show HiGP has a good parallel scalability, and $\mathcal{H}^2$ matrix results match with the strong scaling results in H2Pack [@Huang:2020] since HiGP uses the same $\mathcal{H}^2$ matrix parallel algorithms as H2Pack.
+
+**2D Rastrigin, Matern32 kernel, H2 matrix**
+
+| Cores | Training ||| Inference |||
+|-------|----------|---------|------------|----------|---------|------------|
+|       | Time (s) | Speedup | Efficiency | Time (s) | Speedup | Efficiency |
+| 1     | 1480.51  | 1.00x   | 100%       | 30.62    | 1.00x   | 100%       |
+| 2     | 759.45   | 1.95x   | 97%        | 15.73    | 1.95x   | 97%        |
+| 4     | 399.82   | 3.70x   | 93%        | 8.33     | 3.67x   | 92%        |
+| 8     | 215.49   | 6.87x   | 86%        | 4.47     | 6.85x   | 86%        |
+| 16    | 133.78   | 11.07x  | 69%        | 2.86     | 10.71x  | 67%        |
+
+**20-D Rastrigin, Matern32 kernel, dense/on-the-fly**
+
+| Cores | Training ||| Inference |||
+|-------|----------|---------|------------|----------|---------|------------|
+|       | Time (s) | Speedup | Efficiency | Time (s) | Speedup | Efficiency |
+| 1     | 2599.17  | 1.00x   | 100%       | 16.57    | 1.00x   | 100%       |
+| 2     | 1411.49  | 1.84x   | 92%        | 9.02     | 1.84x   | 92%        |
+| 4     | 744.72   | 3.49x   | 87%        | 5.03     | 3.29x   | 82%        |
+| 8     | 398.91   | 6.52x   | 81%        | 2.80     | 5.92x   | 74%        |
+| 16    | 229.92   | 11.30x  | 71%        | 1.76     | 9.41x   | 59%        |
 
 # References
