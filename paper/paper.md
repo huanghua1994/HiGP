@@ -109,16 +109,14 @@ We tested two data sets from the UCI Machine Learning Datasets: the "Bike Sharin
 - Optimizer: Adam with a learning rate of 0.01
 - Precision: 32-bit floating point (FP32)
 
-## End-to-End Tests
-
-We first compared the end-to-end (E2E) accuracy and performance between HiGP and GPyTorch. For accuracy comparison, we conducted experiments on two small datasets and the test results show HiGP achieves equivalent GP accuracy compared to GPyTorch:
+We first compared the end-to-end (E2E) accuracy and performance between HiGP and GPyTorch. \autoref{table_accuracy_test} shows HiGP achieves equivalent GP accuracy compared to GPyTorch, and \autoref{table_gpytorch_perf_comp} shows HiGP has better performance than GPyTorch under fixed computational budget constraints and can handle some large datasets that GPyTorch cannot handle.
 
 | Dataset | n\_train | Kernel | HiGP Mode | HiGP Final RMSE | GPyTorch Final RMSE |
 |---------|---------|--------|-----------|-----------------|---------------------|
 | Bike | 3,000 | RBF | dense | 0.0285 | 0.0284 |
 | Rosenbrock (5D) | 3,000 | Matern32 | dense | 0.0603 | 0.0658 |
 
-Then, we tested multiple large datasets and synthetic target functions to compare the performance. Test results show HiGP has better performance than GPyTorch under fixed computational budget constraints.
+Table: HiGP accuracy tests on small data sets \label{table_accuracy_test}
 
 | Dataset | n\_train | Kernel | HiGP Mode | HiGP Time (s) | GPyTorch Time (s) |
 |---------|---------|--------|-----------|---------------|------------------|
@@ -131,11 +129,9 @@ Then, we tested multiple large datasets and synthetic target functions to compar
 | Rosenbrock (2D) | 30,000 | RBF | H2 | 82.2 | 231.3 |
 | Rosenbrock (20D) | 30,000 | RBF | on-the-fly | 190.8 | 230.6 |
 
-## Parallel Strong Scaling Tests
+Table: Performance comparison between HiGP and GPyTorch on large datasets \label{table_gpytorch_perf_comp}
 
-These tests show HiGP has a good parallel scalability, and $\mathcal{H}^2$ matrix results match with the strong scaling results in H2Pack [@Huang:2020] since HiGP uses the same $\mathcal{H}^2$ matrix parallel algorithms as H2Pack.
-
-**2D Rastrigin, Matern32 kernel, H2 matrix**
+We also tested the parallel strong scaling ability of HiGP. \autoref{table_scaling_h2} and \autoref{table_scaling_dense} show HiGP has a good parallel scalability, and $\mathcal{H}^2$ matrix results match with the strong scaling results in H2Pack [@Huang:2020] since HiGP uses the same $\mathcal{H}^2$ matrix parallel algorithms as H2Pack.
 
 | Cores | Training ||| Inference |||
 |-------|----------|---------|------------|----------|---------|------------|
@@ -146,7 +142,7 @@ These tests show HiGP has a good parallel scalability, and $\mathcal{H}^2$ matri
 | 8     | 215.49   | 6.87x   | 86%        | 4.47     | 6.85x   | 86%        |
 | 16    | 133.78   | 11.07x  | 69%        | 2.86     | 10.71x  | 67%        |
 
-**20-D Rastrigin, Matern32 kernel, dense/on-the-fly**
+Table: HiGP strong scaling performance test results with the 2D Rastrigin data set, Matern32 kernel, and using $\mathcal{H}^2$ matrix method \label{table_scaling_h2}
 
 | Cores | Training ||| Inference |||
 |-------|----------|---------|------------|----------|---------|------------|
@@ -156,5 +152,7 @@ These tests show HiGP has a good parallel scalability, and $\mathcal{H}^2$ matri
 | 4     | 744.72   | 3.49x   | 87%        | 5.03     | 3.29x   | 82%        |
 | 8     | 398.91   | 6.52x   | 81%        | 2.80     | 5.92x   | 74%        |
 | 16    | 229.92   | 11.30x  | 71%        | 1.76     | 9.41x   | 59%        |
+
+Table: HiGP strong scaling performance test results with the 20-D Rastrigin data set, Matern32 kernel, and using dense/on-the-fly method \label{table_scaling_dense}
 
 # References
