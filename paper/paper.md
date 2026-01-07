@@ -22,7 +22,7 @@ authors:
     corresponding: true
     affiliation: 1
 affiliations:
- - name: School of Computational Science, Engineering, Georgia Institute of Technology, USA
+ - name: School of Computational Science and Engineering, Georgia Institute of Technology, USA
    index: 1
  - name: Department of Mathematics, Emory University, USA
    index: 2
