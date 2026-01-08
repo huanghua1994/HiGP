@@ -63,7 +63,7 @@ $$
 \text{tr}{(\widehat{\mathbf{K}}^{-1} \frac{\partial \widehat{\mathbf{K}}}{\partial \theta})}={\text{tr}}\left({{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right)+
  {\text{tr}}\left({\widehat{\mathbf{K}}^{-1}}\frac{\partial \widehat{\mathbf{K}}}{\partial \theta}-{{\mathbf{M}}^{-1}}\frac{\partial {\mathbf{M}}}{\partial \theta}\right). \tag{2}
 \end{equation}
-The second component of each new expression is then estimated using the stochastic Lanczos quadrature [@Ubaru:2017] and the Hutchinson estimator [@Hutchinson:1989; Meyer:2021], respectively.
+The second component of each new expression is then estimated using the stochastic Lanczos quadrature [@Ubaru:2017] and the Hutchinson estimator [@Hutchinson:1989; @Meyer:2021], respectively.
 
 # Statement of Need
 
