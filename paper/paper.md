@@ -155,4 +155,8 @@ Table: HiGP strong scaling performance test results with the 2D Rastrigin data s
 
 Table: HiGP strong scaling performance test results with the 20-D Rastrigin data set, Matern32 kernel, and using dense/on-the-fly method \label{table_scaling_dense}
 
+# Acknowledgements
+
+The research of Y. Xi is supported by NSF awards DMS-2338904. The research of H. Huang and E. Chow is supported by NSF award OAC-2003683.
+
 # References
