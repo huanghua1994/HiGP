@@ -1,189 +1,130 @@
-% GP related
-@book{Rasmussen:2005,
-	title        = {Gaussian Processes for Machine Learning},
-	author       = {Rasmussen, Carl Edward and Williams, Christopher K. I.},
-	year         = 2005,
-	publisher    = {The MIT Press},
-	doi          = {10.7551/mitpress/3206.001.0001},
-	isbn         = {978-0-262-25683-4}
+@inproceedings{Ament:2024,
+	title        = {Robust Gaussian Processes via Relevance Pursuit},
+	author       = {Sebastian Ament and Elizabeth Santorella and David Eriksson and Benjamin Letham and Maximilian Balandat and Eytan Bakshy},
+	year         = {2024},
+	booktitle    = {The Thirty-eighth Annual Conference on Neural Information Processing Systems},
+	url          = {https://dl.acm.org/doi/10.5555/3737916.3739888}
 }
-@book{Murphy:2022,
-	title        = {Probabilistic Machine Learning: An introduction},
-	author       = {Murphy, Kevin P.},
-	year         = 2022,
-	publisher    = {MIT Press},
-	isbn         = {978-0-262-04682-4}
+@article{Aune:2014,
+	title        = {Parameter estimation in high dimensional {Gaussian} distributions},
+	author       = {Erlend Aune and Daniel P. Simpson and Jo Eidsvik},
+	year         = {2014},
+	journal      = {Statistics and Computing},
+	volume       = {24},
+	number       = {2},
+	pages        = {247--263},
+	doi          = {10.1007/s11222-012-9368-y}
 }
-@book{Murphy:2023,
-	title        = {Probabilistic Machine Learning: Advanced Topics},
-	author       = {Murphy, Kevin P.},
-	year         = 2023,
-	publisher    = {MIT Press},
-	isbn         = {978-0-262-04843-9}
-}
-@inproceedings{Michalis:2009,
-	title        = {Variational Learning of Inducing Variables in Sparse {Gaussian} Processes},
-	author       = {Michalis Titsias},
-	year         = 2009,
-	month        = apr,
-	booktitle    = {Proceedings of the Twelth International Conference on Artificial Intelligence and Statistics},
+@inproceedings{Balcan:2016,
+	title        = {Deep {Gaussian} Processes for Regression using Approximate Expectation Propagation},
+	author       = {Bui, Thang and Hernandez-Lobato, Daniel and Hernandez-Lobato, Jose and Li, Yingzhen and Turner, Richard},
+	year         = {2016},
+	month        = {20--22 Jun},
+	booktitle    = {Proceedings of The 33rd International Conference on Machine Learning},
 	publisher    = {PMLR},
-	volume       = 5,
-	pages        = {567--574},
-	editor       = {David van Dyk and Max Welling}
+	address      = {New York, New York, USA},
+	series       = {Proceedings of Machine Learning Research},
+	volume       = {48},
+	pages        = {1472--1481},
+	url          = {https://dl.acm.org/doi/10.5555/3045390.3045546}
 }
-@article{Hensman:2013,
-	title        = {{Gaussian} Processes for Big Data},
-	author       = {Hensman, James and Fusi, Nicol\`{o} and Lawrence, Neil D.},
-	year         = 2013,
-	month        = sep,
-	publisher    = {AUAI Press},
-    pages        = {282--290},
-    location     = {Bellevue, WA},
-	url          = {https://dl.acm.org/doi/10.5555/3023638.3023667}
-}
-@misc{Wilson:2015,
-	title        = {Thoughts on Massively Scalable {Gaussian} Processes},
-	author       = {Wilson, Andrew Gordon and Dann, Christoph and Nickisch, Hannes},
-	year         = 2015,
-	utl          = {https://arxiv.org/abs/1511.01870}
-}
-@inproceedings{Pleiss:2018,
-	title        = {Constant-Time Predictive Distributions for {Gaussian} Processes},
-	author       = {Pleiss, Geoff and Gardner, Jacob and Weinberger, Kilian and Wilson, Andrew Gordon},
-	year         = 2018,
-	booktitle    = {Proceedings of the 35th International Conference on Machine Learning},
-	publisher    = {PMLR},
-	address      = {Proceedings of Machine Learning Research},
-	volume       = 80,
-	pages        = {4114--4123}
-}
-@book{Saad:2003,
-	title        = {Iterative Methods for Sparse Linear Systems},
-	author       = {Saad, Yousef},
-	year         = 2003,
-	publisher    = {Society for Industrial and Applied Mathematics},
-	doi          = {10.1137/1.9780898718003}
-}
-@article{Hutchinson:1989,
-	title        = {A Stochastic Estimator of the Trace of the Influence Matrix for Laplacian Smoothing Splines},
-	author       = {Hutchinson, M.F.},
-	year         = 1989,
-	month        = jan,
-	journal      = {Communications in Statistics - Simulation and Computation},
-	volume       = 18,
-	number       = 3,
-	pages        = {1059--1076},
-	doi          = {10.1080/03610918908812806}
-}
-@inproceedings{Meyer:2021,
-	title        = {Hutch++: Optimal stochastic trace estimation},
-	author       = {Meyer, Raphael A and Musco, Cameron and Musco, Christopher and Woodruff, David P},
-	year         = 2021,
-	booktitle    = {Symposium on Simplicity in Algorithms (SOSA)},
-	publisher    = {SIAM},
-	pages        = {142--155},
-	doi          = {10.1137/1.9781611976496.16}
-}
-@article{Ubaru:2017,
-	title        = {Fast Estimation of $tr(f(A))$ via Stochastic Lanczos Quadrature},
-	author       = {Ubaru, Shashanka and Chen, Jie and Saad, Yousef},
-	year         = 2017,
-	month        = jan,
-	journal      = {SIAM Journal on Matrix Analysis and Applications},
-	publisher    = {Society for Industrial and Applied Mathematics},
-	volume       = 38,
-	number       = 4,
-	pages        = {1075--1099},
-	doi          = {10.1137/16M1104974}
-}
-% H2 matrix and FMM
-@incollection{Hackbusch:2000,
-	title        = {On $\mathcal{H}^2$-matrices},
-	author       = {Hackbusch, Wolfgang and Khoromskij, Boris N. and Sauter, Stefan A.},
-	year         = 2000,
-	booktitle    = {Lectures on Applied Mathematics: Proceedings of the Symposium Organized by the Sonderforschungsbereich 438 on the occasion of Karl-Heinz Hoffmann's 60th birthday, Munich, June 30 - July 1, 1999},
-	publisher    = {Springer},
-	address      = {Berlin},
-	pages        = {9--29},
-	institution  = {{Max Planck Institute for Mathematics in the Sciences}},
-	doi          = {10.1007/978-3-642-59709-1_2}
-}
-@article{Hackbusch:2002,
-	title        = {Data-sparse approximation by adaptive {$\mathcal{H}^2$-matrices}},
-	author       = {Hackbusch, Wolfgang and B{\"o}rm, Steffen},
-	year         = 2002,
-	journal      = {Computing},
-	volume       = 69,
-	number       = 1,
-	pages        = {1--35},
-	doi          = {10.1007/s00607-002-1450-4}
-}
-@article{Xing:2019,
-	title        = {Interpolative decomposition via proxy points for kernel matrices},
-	author       = {Xing, Xin and Chow, Edmond},
-	year         = 2020,
-	journal      = {SIAM Journal on Matrix Analysis and Applications},
-	volume       = 41,
-	pages        = {221--243},
-	doi          = {10.1137/19m1258700}
-}
-@article{Huang:2020,
-	title        = {{H2Pack}: High-performance \textit{{H}} $^{\textrm{2}}$ Matrix Package for Kernel Matrices Using the Proxy Point Method},
-	author       = {Huang, Hua and Xing, Xin and Chow, Edmond},
-	year         = 2020,
-	month        = 12,
-	journal      = {ACM Transactions on Mathematical Software},
-	volume       = 47,
-	number       = 1,
-	pages        = {1--29},
-	doi          = {10.1145/3412850}
+@misc{Burt:2021,
+	title        = {Barely Biased Learning for {Gaussian} Process Regression},
+	author       = {David R. Burt and Artem Artemev and Mark van der Wilk},
+	year         = {2021},
+	url          = {https://arxiv.org/abs/2109.09417}
 }
 @article{Cai:2023,
 	title        = {Data-driven Construction of Hierarchical Matrices with Nested Bases},
 	author       = {Cai, Difeng and Huang, Hua and Chow, Edmond and Xi, Yuanzhe},
-	year         = 2023,
+	year         = {2023},
 	journal      = {SIAM Journal on Scientific Computing},
 	volume       = {46},
 	number       = {2},
 	pages        = {S24-S50},
 	doi          = {10.1137/22m1500848}
 }
-% AFN related
-@article{Zhao:2024,
-	title        = {An Adaptive Factorized {Nystr\"om} Preconditioner for Regularized Kernel Matrices},
-	author       = {Zhao, Shifan and Xu, Tianshi and Huang, Hua and Chow, Edmond and Xi, Yuanzhe},
-	year         = 2024,
-	journal      = {SIAM Journal on Scientific Computing},
-	volume       = 46,
-	number       = 4,
-	pages        = {A2351-A2376},
-	doi          = {10.1137/23M1565139}
+@article{Charlier:2021,
+	title        = {Kernel Operations on the GPU, with Autodiff, without Memory Overflows},
+	author       = {Charlier, Benjamin and Feydy, Jean and Glaunès, Joan Alexis and Collin, François-David and Durif, Ghislain},
+	year         = {2021},
+	journal      = {Journal of Machine Learning Research},
+	volume       = {22},
+	number       = {74},
+	pages        = {1--6},
+	url          = {https://dl.acm.org/doi/10.5555/3546258.3546332}
+}
+@inproceedings{Chen:2023,
+	title        = {Towards Scalable Kernel-Based Regularized System Identification},
+	author       = {Chen, Lujing and Chen, Tianshi and Detha, Utkarsh and Andersen, Martin S.},
+	year         = {2023},
+	booktitle    = {2023 62nd IEEE Conference on Decision and Control (CDC)},
+	pages        = {1498--1504},
+	doi          = {10.1109/CDC49753.2023.10384051}
+}
+@inproceedings{Damianou:2013,
+	title        = {Deep {G}aussian Processes},
+	author       = {Damianou, Andreas and Lawrence, Neil D.},
+	year         = {2013},
+	month        = {29 Apr--01 May},
+	booktitle    = {Proceedings of the Sixteenth International Conference on Artificial Intelligence and Statistics},
+	publisher    = {PMLR},
+	address      = {Scottsdale, Arizona, USA},
+	series       = {Proceedings of Machine Learning Research},
+	volume       = {31},
+	pages        = {207--215},
+	editor       = {Carvalho, Carlos M. and Ravikumar, Pradeep}
+}
+@misc{Dutordoir:2021,
+	title        = {{GPflux}: A Library for Deep {Gaussian} Processes},
+	author       = {Vincent Dutordoir and Hugh Salimbeni and Eric Hambro and John McLeod and Felix Leibfried and Artem Artemev and Mark van der Wilk and James Hensman and Marc P. Deisenroth and ST John},
+	year         = {2021},
+	url          = {https://arxiv.org/abs/2104.05674}
+}
+@article{Erlandson:2025,
+	title        = {{smashGP}: Large-Scale Spatial Modeling via Matrix-Free {Gaussian} Processes},
+	author       = {Lucas Erlandson and Estrada Gómez, Ana María and Edmond Chow and Kamran Paynabar},
+	year         = {2025},
+	journal      = {Journal of Computational and Graphical Statistics},
+	publisher    = {ASA Website},
+	volume       = {34},
+	number       = {1},
+	pages        = {15--33},
+	doi          = {10.1080/10618600.2024.2353653}
+}
+@article{Fairbrother:2022,
+	title        = {GaussianProcesses.jl: A Nonparametric Bayes Package for the Julia Language},
+	author       = {Fairbrother, Jamie and Nemeth, Christopher and Rischard, Maxime and Brea, Johanni and Pinder, Thomas},
+	year         = {2022},
+	journal      = {Journal of Statistical Software},
+	volume       = {102},
+	number       = {1},
+	doi          = {10.18637/jss.v102.i01}
 }
 % Others
 @article{Gardner:2018,
 	title        = {{GPyTorch}: Blackbox matrix-matrix {Gaussian} process inference with {GPU} acceleration},
 	author       = {Gardner, Jacob and Pleiss, Geoff and Weinberger, Kilian Q and Bindel, David and Wilson, Andrew G},
-	year         = 2018,
+	year         = {2018},
 	journal      = {Advances in Neural Information Processing Systems},
-	volume       = 31,
+	volume       = {31},
 	url          = {https://dl.acm.org/doi/10.5555/3327757.3327857}
 }
 @article{GPflow:2017,
 	title        = {{GPflow}: A {Gaussian} process library using {TensorFlow}},
 	author       = {Matthews, Alexander G. de G. and {van der Wilk}, Mark and Nickson, Tom and Fujii, Keisuke. and {Boukouvalas}, Alexis and {Le{\'o}n-Villagr{\'a}}, Pablo and Ghahramani, Zoubin and Hensman, James},
-	year         = 2017,
+	year         = {2017},
 	month        = {apr},
 	journal      = {Journal of Machine Learning Research},
-	volume       = 18,
-	number       = 40,
+	volume       = {18},
+	number       = {40},
 	pages        = {1--6},
 	url          = {https://dl.acm.org/doi/10.5555/3122009.3122049}
 }
 @misc{GPflow:2020,
 	title        = {A Framework for Interdomain and Multioutput {Gaussian} Processes},
 	author       = {{van der Wilk}, Mark and Dutordoir, Vincent and John, ST and Artemev, Artem and Adam, Vincent and Hensman, James},
-	year         = 2020,
+	year         = {2020},
 	url          = {https://arxiv.org/abs/2003.01115}
 }
 @misc{GPy:2014,
@@ -192,209 +133,260 @@
 	year         = {since 2012},
 	howpublished = {http://github.com/SheffieldML/GPy}
 }
-@misc{TensorFlow:2015,
-	title        = {{TensorFlow}: Large-Scale Machine Learning on Heterogeneous Systems},
-	author       = {Mart\'{i}n~Abadi and Ashish~Agarwal and Paul~Barham and Eugene~Brevdo and Zhifeng~Chen and Craig~Citro and Greg~S.~Corrado and Andy~Davis and Jeffrey~Dean and Matthieu~Devin and Sanjay~Ghemawat and Ian~Goodfellow and Andrew~Harp and Geoffrey~Irving and Michael~Isard and Yangqing Jia and Rafal~Jozefowicz and Lukasz~Kaiser and Manjunath~Kudlur and Josh~Levenberg and Dandelion~Man\'{e} and Rajat~Monga and Sherry~Moore and Derek~Murray and Chris~Olah and Mike~Schuster and Jonathon~Shlens and Benoit~Steiner and Ilya~Sutskever and Kunal~Talwar and Paul~Tucker and Vincent~Vanhoucke and Vijay~Vasudevan and Fernanda~Vi\'{e}gas and Oriol~Vinyals and Pete~Warden and Martin~Wattenberg and Martin~Wicke and Yuan~Yu and Xiaoqiang~Zheng},
-	year         = 2015,
-	url          = {https://www.tensorflow.org/},
-	note         = {Software available from tensorflow.org}
+% H2 matrix and FMM
+@incollection{Hackbusch:2000,
+	title        = {On $\mathcal{H}^2$-matrices},
+	author       = {Hackbusch, Wolfgang and Khoromskij, Boris N. and Sauter, Stefan A.},
+	year         = {2000},
+	booktitle    = {Lectures on Applied Mathematics: Proceedings of the Symposium Organized by the Sonderforschungsbereich 438 on the occasion of Karl-Heinz Hoffmann's 60th birthday, Munich, June 30 - July 1, 1999},
+	publisher    = {Springer},
+	address      = {Berlin},
+	pages        = {9--29},
+	doi          = {10.1007/978-3-642-59709-1_2},
+	institution  = {{Max Planck Institute for Mathematics in the Sciences}}
+}
+@article{Hackbusch:2002,
+	title        = {Data-sparse approximation by adaptive {$\mathcal{H}^2$-matrices}},
+	author       = {Hackbusch, Wolfgang and B{\"o}rm, Steffen},
+	year         = {2002},
+	journal      = {Computing},
+	volume       = {69},
+	number       = {1},
+	pages        = {1--35},
+	doi          = {10.1007/s00607-002-1450-4}
 }
 @article{Harris:2020,
 	title        = {Array programming with {NumPy}},
 	author       = {Charles R. Harris and K. Jarrod Millman and St{\'{e}}fan J. van der Walt and Ralf Gommers and Pauli Virtanen and David Cournapeau and Eric Wieser and Julian Taylor and Sebastian Berg and Nathaniel J. Smith and Robert Kern and Matti Picus and Stephan Hoyer and Marten H. van Kerkwijk and Matthew Brett and Allan Haldane and Jaime Fern{\'{a}}ndez del R{\'{i}}o and Mark Wiebe and Pearu Peterson and Pierre G{\'{e}}rard-Marchant and Kevin Sheppard and Tyler Reddy and Warren Weckesser and Hameer Abbasi and Christoph Gohlke and Travis E. Oliphant},
-	year         = 2020,
+	year         = {2020},
 	month        = sep,
 	journal      = {Nature},
 	publisher    = {Springer Science and Business Media {LLC}},
-	volume       = 585,
-	number       = 7825,
+	volume       = {585},
+	number       = {7825},
 	pages        = {357--362},
 	doi          = {10.1038/s41586-020-2649-2},
 	url          = {https://doi.org/10.1038/s41586-020-2649-2}
 }
-@misc{Wagner:2025,
-	title        = {Preconditioned Additive {Gaussian} Processes with Fourier Acceleration},
-	author       = {Theresa Wagner and Tianshi Xu and Franziska Nestler and Yuanzhe Xi and Martin Stoll},
-	year         = 2025,
-	url          = {https://arxiv.org/abs/2504.00480}
+@article{Hensman:2013,
+	title        = {{Gaussian} Processes for Big Data},
+	author       = {Hensman, James and Fusi, Nicol\`{o} and Lawrence, Neil D.},
+	year         = {2013},
+	month        = sep,
+	location     = {Bellevue, WA},
+	publisher    = {AUAI Press},
+	pages        = {282--290},
+	url          = {https://dl.acm.org/doi/10.5555/3023638.3023667}
 }
-@misc{Burt:2021,
-	title        = {Barely Biased Learning for {Gaussian} Process Regression},
-	author       = {David R. Burt and Artem Artemev and Mark van der Wilk},
-	year         = 2021,
-	url          = {https://arxiv.org/abs/2109.09417}
+@article{Huang:2020,
+	title        = {{H2Pack}: High-performance \textit{{H}} $^{\textrm{2}}$ Matrix Package for Kernel Matrices Using the Proxy Point Method},
+	author       = {Huang, Hua and Xing, Xin and Chow, Edmond},
+	year         = {2020},
+	month        = {12},
+	journal      = {ACM Transactions on Mathematical Software},
+	volume       = {47},
+	number       = {1},
+	pages        = {1--29},
+	doi          = {10.1145/3412850}
 }
-@inproceedings{Balcan:2016,
-	title        = {Deep {Gaussian} Processes for Regression using Approximate Expectation Propagation},
-	author       = {Bui, Thang and Hernandez-Lobato, Daniel and Hernandez-Lobato, Jose and Li, Yingzhen and Turner, Richard},
-	year         = 2016,
-	month        = {20--22 Jun},
-	booktitle    = {Proceedings of The 33rd International Conference on Machine Learning},
-	publisher    = {PMLR},
-	address      = {New York, New York, USA},
-	series       = {Proceedings of Machine Learning Research},
-	volume       = 48,
-	pages        = {1472--1481},
-	url          = {https://dl.acm.org/doi/10.5555/3045390.3045546}
+@misc{Huckelheim:2023,
+	title        = {Understanding Automatic Differentiation Pitfalls},
+	author       = {Jan Hückelheim and Harshitha Menon and William Moses and Bruce Christianson and Paul Hovland and Laurent Hascoët},
+	year         = {2023},
+	url          = {https://arxiv.org/abs/2305.07546}
 }
-@inproceedings{Damianou:2013,
-	title        = {Deep {G}aussian Processes},
-	author       = {Damianou, Andreas and Lawrence, Neil D.},
-	year         = 2013,
-	month        = {29 Apr--01 May},
-	booktitle    = {Proceedings of the Sixteenth International Conference on Artificial Intelligence and Statistics},
-	publisher    = {PMLR},
-	address      = {Scottsdale, Arizona, USA},
-	series       = {Proceedings of Machine Learning Research},
-	volume       = 31,
-	pages        = {207--215},
-	editor       = {Carvalho, Carlos M. and Ravikumar, Pradeep}
+@article{Hutchinson:1989,
+	title        = {A Stochastic Estimator of the Trace of the Influence Matrix for Laplacian Smoothing Splines},
+	author       = {Hutchinson, M.F.},
+	year         = {1989},
+	month        = jan,
+	journal      = {Communications in Statistics - Simulation and Computation},
+	volume       = {18},
+	number       = {3},
+	pages        = {1059--1076},
+	doi          = {10.1080/03610918908812806}
 }
 @misc{Jakkala:2021,
 	title        = {Deep {Gaussian} Processes: A Survey},
 	author       = {Kalvik Jakkala},
-	year         = 2021,
-	url          = {https://arxiv.org/abs/2106.12135},
+	year         = {2021},
+	url          = {https://arxiv.org/abs/2106.12135}
 }
-@misc{Dutordoir:2021,
-	title        = {{GPflux}: A Library for Deep {Gaussian} Processes},
-	author       = {Vincent Dutordoir and Hugh Salimbeni and Eric Hambro and John McLeod and Felix Leibfried and Artem Artemev and Mark van der Wilk and James Hensman and Marc P. Deisenroth and ST John},
-	year         = 2021,
-	url          = {https://arxiv.org/abs/2104.05674},
+@inproceedings{Lin:2025,
+	title        = {Scalable Gaussian Processes with Latent Kronecker Structure},
+	author       = {Jihao Andreas Lin and Sebastian Ament and Maximilian Balandat and David Eriksson and Jos{\'e} Miguel Hern{\'a}ndez-Lobato and Eytan Bakshy},
+	year         = {2025},
+	booktitle    = {Forty-second International Conference on Machine Learning},
+	url          = {https://openreview.net/forum?id=Nv70EgUAA7}
 }
-@inproceedings{Wenger:2022,
-	title        = {Preconditioning for Scalable {Gaussian} Process Hyperparameter Optimization},
-	author       = {Wenger, Jonathan and Pleiss, Geoff and Hennig, Philipp and Cunningham, John and Gardner, Jacob},
-	year         = 2022,
-	month        = jun,
-	booktitle    = {Proceedings of the 39th International Conference on Machine Learning},
+@inproceedings{Meyer:2021,
+	title        = {Hutch++: Optimal stochastic trace estimation},
+	author       = {Meyer, Raphael A and Musco, Cameron and Musco, Christopher and Woodruff, David P},
+	year         = {2021},
+	booktitle    = {Symposium on Simplicity in Algorithms (SOSA)},
+	publisher    = {SIAM},
+	pages        = {142--155},
+	doi          = {10.1137/1.9781611976496.16}
+}
+@inproceedings{Michalis:2009,
+	title        = {Variational Learning of Inducing Variables in Sparse {Gaussian} Processes},
+	author       = {Michalis Titsias},
+	year         = {2009},
+	month        = apr,
+	booktitle    = {Proceedings of the Twelth International Conference on Artificial Intelligence and Statistics},
 	publisher    = {PMLR},
-	pages        = {23751--23780}
+	volume       = {5},
+	pages        = {567--574},
+	editor       = {David van Dyk and Max Welling}
+}
+@book{Murphy:2022,
+	title        = {Probabilistic Machine Learning: An introduction},
+	author       = {Murphy, Kevin P.},
+	year         = {2022},
+	publisher    = {MIT Press},
+	isbn         = {978-0-262-04682-4}
+}
+@book{Murphy:2023,
+	title        = {Probabilistic Machine Learning: Advanced Topics},
+	author       = {Murphy, Kevin P.},
+	year         = {2023},
+	publisher    = {MIT Press},
+	isbn         = {978-0-262-04843-9}
+}
+@article{Pan:2024,
+	title        = {GPU-Accelerated Vecchia Approximations of Gaussian Processes for Geospatial Data using Batched Matrix Computations},
+	author       = {Pan, Qilong and Abdulah, Sameh and Genton, Marc G. and Keyes, David E. and Ltaief, Hatem and Sun, Ying},
+	year         = {2024},
+	booktitle    = {ISC High Performance 2024 Research Paper Proceedings (39th International Conference)},
+	pages        = {1--12},
+	doi          = {10.23919/ISC.2024.10528930}
+}
+@article{Pinder:2022,
+	title        = {GPJax: A Gaussian Process Framework in JAX},
+	author       = {Pinder, Thomas and Dodd, Daniel},
+	year         = {2022},
+	journal      = {Journal of Open Source Software},
+	volume       = {7},
+	number       = {75},
+	pages        = {4455},
+	doi          = {10.21105/joss.04455}
+}
+@inproceedings{Pleiss:2018,
+	title        = {Constant-Time Predictive Distributions for {Gaussian} Processes},
+	author       = {Pleiss, Geoff and Gardner, Jacob and Weinberger, Kilian and Wilson, Andrew Gordon},
+	year         = {2018},
+	booktitle    = {Proceedings of the 35th International Conference on Machine Learning},
+	publisher    = {PMLR},
+	address      = {Proceedings of Machine Learning Research},
+	volume       = {80},
+	pages        = {4114--4123}
 }
 @inproceedings{Potapczynski:2021,
 	title        = {Bias-Free Scalable {Gaussian} Processes via Randomized Truncations},
 	author       = {Potapczynski, Andres and Wu, Luhuan and Biderman, Dan and Pleiss, Geoff and Cunningham, John P.},
-	year         = 2021,
+	year         = {2021},
 	month        = jul,
 	booktitle    = {Proceedings of the 38th International Conference on Machine Learning},
 	publisher    = {PMLR},
 	pages        = {8609--8619}
 }
-@misc{Huckelheim:2023,
-	title        = {Understanding Automatic Differentiation Pitfalls},
-	author       = {Jan Hückelheim and Harshitha Menon and William Moses and Bruce Christianson and Paul Hovland and Laurent Hascoët},
-	year         = 2023,
-    url          = {https://arxiv.org/abs/2305.07546},
+% GP related
+@book{Rasmussen:2005,
+	title        = {Gaussian Processes for Machine Learning},
+	author       = {Rasmussen, Carl Edward and Williams, Christopher K. I.},
+	year         = {2005},
+	publisher    = {The MIT Press},
+	doi          = {10.7551/mitpress/3206.001.0001},
+	isbn         = {978-0-262-25683-4}
 }
-@article{Erlandson:2025,
-	title        = {{smashGP}: Large-Scale Spatial Modeling via Matrix-Free {Gaussian} Processes},
-	author       = {Lucas Erlandson and Estrada Gómez, Ana María and Edmond Chow and Kamran Paynabar},
-	year         = 2025,
-	journal      = {Journal of Computational and Graphical Statistics},
-	publisher    = {ASA Website},
-	volume       = 34,
-	number       = 1,
-	pages        = {15--33},
-	doi          = {10.1080/10618600.2024.2353653}
+@book{Saad:2003,
+	title        = {Iterative Methods for Sparse Linear Systems},
+	author       = {Saad, Yousef},
+	year         = {2003},
+	publisher    = {Society for Industrial and Applied Mathematics},
+	doi          = {10.1137/1.9780898718003}
 }
-@article{Aune:2014,
-	title        = {Parameter estimation in high dimensional {Gaussian} distributions},
-	author       = {Erlend Aune and Daniel P. Simpson and Jo Eidsvik},
-	year         = 2014,
-	journal      = {Statistics and Computing},
-	volume       = 24,
-	number       = 2,
-	pages        = {247--263},
-	doi          = {10.1007/s11222-012-9368-y}
+@misc{TensorFlow:2015,
+	title        = {{TensorFlow}: Large-Scale Machine Learning on Heterogeneous Systems},
+	author       = {Mart\'{i}n~Abadi and Ashish~Agarwal and Paul~Barham and Eugene~Brevdo and Zhifeng~Chen and Craig~Citro and Greg~S.~Corrado and Andy~Davis and Jeffrey~Dean and Matthieu~Devin and Sanjay~Ghemawat and Ian~Goodfellow and Andrew~Harp and Geoffrey~Irving and Michael~Isard and Yangqing Jia and Rafal~Jozefowicz and Lukasz~Kaiser and Manjunath~Kudlur and Josh~Levenberg and Dandelion~Man\'{e} and Rajat~Monga and Sherry~Moore and Derek~Murray and Chris~Olah and Mike~Schuster and Jonathon~Shlens and Benoit~Steiner and Ilya~Sutskever and Kunal~Talwar and Paul~Tucker and Vincent~Vanhoucke and Vijay~Vasudevan and Fernanda~Vi\'{e}gas and Oriol~Vinyals and Pete~Warden and Martin~Wattenberg and Martin~Wicke and Yuan~Yu and Xiaoqiang~Zheng},
+	year         = {2015},
+	url          = {https://www.tensorflow.org/},
+	note         = {Software available from tensorflow.org}
+}
+@article{Ubaru:2017,
+	title        = {Fast Estimation of $tr(f(A))$ via Stochastic Lanczos Quadrature},
+	author       = {Ubaru, Shashanka and Chen, Jie and Saad, Yousef},
+	year         = {2017},
+	month        = jan,
+	journal      = {SIAM Journal on Matrix Analysis and Applications},
+	publisher    = {Society for Industrial and Applied Mathematics},
+	volume       = {38},
+	number       = {4},
+	pages        = {1075--1099},
+	doi          = {10.1137/16M1104974}
+}
+@misc{Wagner:2025,
+	title        = {Preconditioned Additive {Gaussian} Processes with Fourier Acceleration},
+	author       = {Theresa Wagner and Tianshi Xu and Franziska Nestler and Yuanzhe Xi and Martin Stoll},
+	year         = {2025},
+	url          = {https://arxiv.org/abs/2504.00480}
+}
+@inproceedings{Wenger:2022,
+	title        = {Preconditioning for Scalable {Gaussian} Process Hyperparameter Optimization},
+	author       = {Wenger, Jonathan and Pleiss, Geoff and Hennig, Philipp and Cunningham, John and Gardner, Jacob},
+	year         = {2022},
+	month        = jun,
+	booktitle    = {Proceedings of the 39th International Conference on Machine Learning},
+	publisher    = {PMLR},
+	pages        = {23751--23780}
+}
+@inproceedings{Wenger:2022,
+	title        = {Preconditioning for Scalable Gaussian Process Hyperparameter Optimization},
+	author       = {Wenger, Jonathan and Pleiss, Geoff and Hennig, Philipp and Cunningham, John P. and Gardner, Jacob R.},
+	year         = {2022},
+	booktitle    = {Proceedings of the 39th International Conference on Machine Learning},
+	publisher    = {PMLR},
+	pages        = {23751--23780}
+}
+@misc{Wilson:2015,
+	title        = {Thoughts on Massively Scalable {Gaussian} Processes},
+	author       = {Wilson, Andrew Gordon and Dann, Christoph and Nickisch, Hannes},
+	year         = {2015},
+	utl          = {https://arxiv.org/abs/1511.01870}
+}
+@inproceedings{Wu:2024,
+	title        = {Large-Scale Gaussian Processes via Alternating Projection},
+	author       = {Wu, Kenan and Meinshausen, Nicolai and Cunningham, John P. and Pozzi, Matteo},
+	year         = {2024},
+	booktitle    = {Proceedings of the 27th International Conference on Artificial Intelligence and Statistics},
+	publisher    = {PMLR},
+	pages        = {2810--2818}
+}
+@article{Xing:2019,
+	title        = {Interpolative decomposition via proxy points for kernel matrices},
+	author       = {Xing, Xin and Chow, Edmond},
+	year         = {2020},
+	journal      = {SIAM Journal on Matrix Analysis and Applications},
+	volume       = {41},
+	pages        = {221--243},
+	doi          = {10.1137/19m1258700}
 }
 @inproceedings{Zhang:2024,
 	title        = {Asymptotic properties of generalized maximum likelihood hyper-parameter estimator for regularized system identification},
 	author       = {Zhang, Meng and Chen, Tianshi and Mu, Biqiang},
-	year         = 2024,
+	year         = {2024},
 	booktitle    = {2024 IEEE 63rd Conference on Decision and Control (CDC)},
 	pages        = {4961--4966},
 	doi          = {10.1109/CDC56724.2024.10885816}
 }
-@inproceedings{Chen:2023,
-	title        = {Towards Scalable Kernel-Based Regularized System Identification},
-	author       = {Chen, Lujing and Chen, Tianshi and Detha, Utkarsh and Andersen, Martin S.},
-	year         = {2023},
-	booktitle    = {2023 62nd IEEE Conference on Decision and Control (CDC)},
-	pages        = {1498-1504},
-	doi          = {10.1109/CDC49753.2023.10384051}
-}
-
-@article{Pinder:2022,
-  title   = {GPJax: A Gaussian Process Framework in JAX},
-  author  = {Pinder, Thomas and Dodd, Daniel},
-  journal = {Journal of Open Source Software},
-  volume  = {7},
-  number  = {75},
-  pages   = {4455},
-  year    = {2022},
-  doi     = {10.21105/joss.04455}
-}
-
-@article{Charlier:2021,
-  title   = {Kernel Operations on the GPU, with Autodiff, without Memory Overflows},
-  author  = {Charlier, Benjamin and Feydy, Jean and Glaunès, Joan Alexis and Collin, François-David and Durif, Ghislain},
-  journal = {Journal of Machine Learning Research},
-  volume  = {22},
-  number  = {74},
-  pages   = {1--6},
-  year    = {2021},
-  url     = {https://dl.acm.org/doi/10.5555/3546258.3546332}
-}
-
-@article{Fairbrother:2022,
-  title   = {GaussianProcesses.jl: A Nonparametric Bayes Package for the Julia Language},
-  author  = {Fairbrother, Jamie and Nemeth, Christopher and Rischard, Maxime and Brea, Johanni and Pinder, Thomas},
-  journal = {Journal of Statistical Software},
-  volume  = {102},
-  number  = {1},
-  year    = {2022},
-  doi     = {10.18637/jss.v102.i01}
-}
-
-@inproceedings{Wenger:2022,
-  title     = {Preconditioning for Scalable Gaussian Process Hyperparameter Optimization},
-  author    = {Wenger, Jonathan and Pleiss, Geoff and Hennig, Philipp and Cunningham, John P. and Gardner, Jacob R.},
-  booktitle = {Proceedings of the 39th International Conference on Machine Learning},
-  year      = {2022},
-  pages     = {23751--23780},
-  publisher = {PMLR}
-}
-
-@inproceedings{Wu:2024,
-  title     = {Large-Scale Gaussian Processes via Alternating Projection},
-  author    = {Wu, Kenan and Meinshausen, Nicolai and Cunningham, John P. and Pozzi, Matteo},
-  booktitle = {Proceedings of the 27th International Conference on Artificial Intelligence and Statistics},
-  year      = {2024},
-  pages     = {2810--2818},
-  publisher = {PMLR}
-}
-
-@article{Pan:2024,
-  author={Pan, Qilong and Abdulah, Sameh and Genton, Marc G. and Keyes, David E. and Ltaief, Hatem and Sun, Ying},
-  booktitle={ISC High Performance 2024 Research Paper Proceedings (39th International Conference)}, 
-  title={GPU-Accelerated Vecchia Approximations of Gaussian Processes for Geospatial Data using Batched Matrix Computations}, 
-  year={2024},
-  pages={1-12},
-  doi={10.23919/ISC.2024.10528930}
-}
-
-@inproceedings{Ament:2024,
-  title     = {Robust Gaussian Processes via Relevance Pursuit},
-  author    = {Sebastian Ament and Elizabeth Santorella and David Eriksson and Benjamin Letham and Maximilian Balandat and Eytan Bakshy},
-  booktitle = {The Thirty-eighth Annual Conference on Neural Information Processing Systems},
-  year      = {2024},
-  url       = {https://dl.acm.org/doi/10.5555/3737916.3739888}
-}
-
-@inproceedings{Lin:2025,
-  title     = {Scalable Gaussian Processes with Latent Kronecker Structure},
-  author    = {Jihao Andreas Lin and Sebastian Ament and Maximilian Balandat and David Eriksson and Jos{\'e} Miguel Hern{\'a}ndez-Lobato and Eytan Bakshy},
-  booktitle = {Forty-second International Conference on Machine Learning},
-  year      = {2025},
-  url       = {https://openreview.net/forum?id=Nv70EgUAA7}
+% AFN related
+@article{Zhao:2024,
+	title        = {An Adaptive Factorized {Nystr\"om} Preconditioner for Regularized Kernel Matrices},
+	author       = {Zhao, Shifan and Xu, Tianshi and Huang, Hua and Chow, Edmond and Xi, Yuanzhe},
+	year         = {2024},
+	journal      = {SIAM Journal on Scientific Computing},
+	volume       = {46},
+	number       = {4},
+	pages        = {A2351-A2376},
+	doi          = {10.1137/23M1565139}
 }
