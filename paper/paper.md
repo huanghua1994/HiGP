@@ -157,6 +157,6 @@ Table: HiGP strong scaling performance test results with the 20-D Rastrigin data
 
 # Acknowledgements
 
-The research of Y. Xi is supported by NSF awards DMS-2338904. The research of H. Huang and E. Chow is supported by NSF award OAC-2003683.
+The research of Y. Xi is supported by NSF award DMS-2338904. The research of H. Huang and E. Chow is supported by NSF award OAC-2003683.
 
 # References
